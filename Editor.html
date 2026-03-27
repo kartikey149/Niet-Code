@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIETCode | Editor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
+    <style>
+        :root {
+            --orange: #ffa116;
+            --orange-dim: rgba(255,161,22,0.12);
+            --bg: #0d1117;
+            --surface: #161b22;
+            --surface2: #1c2128;
+            --border: #30363d;
+            --text: #e6edf3;
+            --text-muted: #8b949e;
+            --easy: #3fb950;
+            --medium: #d29922;
+            --hard: #f85149;
+            --green: #3fb950;
+            --red: #f85149;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* ── Navbar ── */
+        .navbar {
+            height: 52px; background: var(--surface); border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 16px;
+            flex-shrink: 0; z-index: 100;
+        }
+        .nav-left { display: flex; align-items: center; gap: 16px; }
+        .brand { font-size: 18px; font-weight: 800; color: var(--orange); text-decoration: none; letter-spacing: -0.5px; }
+        .brand span { color: var(--text); }
+        .sep { color: var(--border); font-size: 20px; }
+        .problem-nav { display: flex; align-items: center; gap: 8px; }
+        .nav-arrow {
+            width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border);
+            background: transparent; color: var(--text-muted); cursor: pointer; display: flex;
+            align-items: center; justify-content: center; font-size: 12px; transition: 0.15s;
+        }
+        .nav-arrow:hover { border-color: var(--orange); color: var(--orange); }
+        .prob-counter { font-size: 13px; color: var(--text-muted); }
+        .nav-right { display: flex; align-items: center; gap: 10px; }
+        .lang-select {
+            background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+            padding: 5px 10px; border-radius: 6px; font-size: 13px; cursor: pointer; outline: none;
+        }
+        .btn { padding: 6px 14px; border-radius: 6px; border: none; font-weight: 600; font-size: 13px; cursor: pointer; transition: 0.15s; }
+        .btn-run { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+        .btn-run:hover { border-color: var(--green); color: var(--green); }
+        .btn-submit { background: var(--orange); color: #000; }
+        .btn-submit:hover { filter: brightness(1.1); }
+
+        /* ── Main Layout ── */
+        .workspace { display: flex; flex: 1; overflow: hidden; gap: 0; }
+
+        /* ── Left Panel ── */
+        .left-panel {
+            width: 420px; min-width: 280px; background: var(--surface); border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; flex-shrink: 0;
+        }
+        .panel-tabs { display: flex; border-bottom: 1px solid var(--border); }
+        .ptab {
+            padding: 12px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
+            color: var(--text-muted); border-bottom: 2px solid transparent; transition: 0.15s;
+        }
+        .ptab.active { color: var(--text); border-bottom-color: var(--orange); }
+        .panel-body { flex: 1; overflow-y: auto; padding: 24px; }
+        .panel-body::-webkit-scrollbar { width: 4px; }
+        .panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        /* Description Content */
+        .prob-title-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+        .prob-title { font-size: 20px; font-weight: 700; }
+        .diff-badge { font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 12px; }
+        .easy-badge { background: rgba(63,185,80,0.15); color: var(--easy); }
+        .medium-badge { background: rgba(210,153,34,0.15); color: var(--medium); }
+        .hard-badge { background: rgba(248,81,73,0.15); color: var(--hard); }
+        .prob-desc { font-size: 14px; line-height: 1.8; color: #cdd9e5; }
+        .prob-desc p { margin-bottom: 14px; }
+        .prob-desc code { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; font-family: 'Consolas', monospace; font-size: 13px; color: #e6edf3; }
+        .example-box { background: var(--surface2); border-left: 3px solid var(--orange); border-radius: 0 8px 8px 0; padding: 14px 16px; margin: 14px 0; font-size: 13px; font-family: 'Consolas', monospace; line-height: 1.8; }
+        .example-label { font-size: 13px; font-weight: 700; margin-bottom: 8px; color: var(--text); font-family: 'Segoe UI', sans-serif; }
+        .constraints-section { margin-top: 20px; }
+        .constraints-section h4 { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+        .constraint-item { font-size: 13px; color: #cdd9e5; margin-bottom: 6px; font-family: 'Consolas', monospace; }
+        .constraint-item::before { content: "• "; color: var(--orange); }
+
+        /* ── Right Panel (Editor) ── */
+        .right-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
+        #monaco-root { flex: 1; }
+
+        /* ── Bottom Console ── */
+        .console-panel {
+            height: 220px; background: var(--surface); border-top: 1px solid var(--border);
+            display: flex; flex-direction: column; flex-shrink: 0; transition: height 0.2s;
+        }
+        .console-panel.collapsed { height: 42px; }
+        .console-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 16px; border-bottom: 1px solid var(--border); cursor: pointer;
+            user-select: none; flex-shrink: 0;
+        }
+        .console-title { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .console-toggle { color: var(--text-muted); font-size: 11px; }
+        .console-body { flex: 1; overflow-y: auto; padding: 12px 16px; font-family: 'Consolas', monospace; font-size: 13px; }
+        .console-body::-webkit-scrollbar { width: 4px; }
+        .console-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        /* Test case tabs */
+        .tc-tabs { display: flex; gap: 6px; align-items: center; padding: 8px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+        .tc-tab {
+            padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 600;
+            cursor: pointer; background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); transition: 0.15s;
+        }
+        .tc-tab.active { background: var(--orange-dim); color: var(--orange); border-color: var(--orange); }
+        .tc-tab.pass { color: var(--green); border-color: transparent; }
+        .tc-tab.fail { color: var(--red); border-color: transparent; }
+        .console-idle { color: var(--text-muted); font-size: 13px; padding: 10px 0; }
+
+        /* Result overlay lines */
+        .result-line { padding: 3px 0; }
+        .result-line.ok { color: var(--green); }
+        .result-line.err { color: var(--red); }
+        .result-line.info { color: var(--text-muted); }
+        .verdict-bar {
+            display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px;
+            border-radius: 8px; font-weight: 700; font-size: 14px; margin-bottom: 10px;
+        }
+        .verdict-ac { background: rgba(63,185,80,0.15); color: var(--green); }
+        .verdict-wa { background: rgba(248,81,73,0.15); color: var(--red); }
+        .verdict-err { background: rgba(248,81,73,0.1); color: #f0a; }
+
+        /* Drag resize handle */
+        .resize-handle {
+            width: 4px; background: var(--border); cursor: col-resize; transition: background 0.15s; flex-shrink: 0;
+        }
+        .resize-handle:hover { background: var(--orange); }
+
+        /* Loading spinner */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--orange); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <div class="nav-left">
+        <a href="index.html" class="brand">NIET<span>Code</span></a>
+        <span class="sep">|</span>
+        <div class="problem-nav">
+            <button class="nav-arrow" title="Previous" onclick="navigateProblem(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+            <span class="prob-counter" id="prob-counter">1 / 3</span>
+            <button class="nav-arrow" title="Next" onclick="navigateProblem(1)"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+        <a href="problems.html" style="font-size:12px; color:var(--text-muted); text-decoration:none; margin-left:4px;">← Problem List</a>
+    </div>
+    <div class="nav-right">
+        <select class="lang-select" id="lang-select" onchange="changeLanguage()">
+            <option value="javascript">JavaScript</option>
+            <option value="python">Python</option>
+            <option value="java">Java</option>
+            <option value="cpp">C++</option>
+        </select>
+        <button class="btn btn-run" onclick="runCode()"><i class="fa-solid fa-play" style="margin-right:5px;font-size:11px;"></i>Run</button>
+        <button class="btn btn-submit" onclick="submitCode()"><i class="fa-solid fa-cloud-arrow-up" style="margin-right:5px;font-size:11px;"></i>Submit</button>
+    </div>
+</nav>
+
+<!-- WORKSPACE -->
+<div class="workspace" id="workspace">
+
+    <!-- LEFT PANEL: Description -->
+    <div class="left-panel" id="left-panel">
+        <div class="panel-tabs">
+            <div class="ptab active" onclick="switchPTab(this,'desc')">Description</div>
+            <div class="ptab" onclick="switchPTab(this,'solution')">Solution</div>
+            <div class="ptab" onclick="switchPTab(this,'submissions')">Submissions</div>
+        </div>
+        <div class="panel-body" id="desc-panel"></div>
+        <div class="panel-body" id="solution-panel" style="display:none;">
+            <p style="color:var(--text-muted); font-size:14px; margin-top: 40px; text-align:center;">🔒 Solutions are visible after you solve the problem or unlock Premium.</p>
+        </div>
+        <div class="panel-body" id="submissions-panel" style="display:none;">
+            <p style="color:var(--text-muted); font-size:14px; margin-top: 40px; text-align:center;">No submissions yet. Run your code!</p>
+        </div>
+    </div>
+
+    <!-- Drag Handle -->
+    <div class="resize-handle" id="resize-handle"></div>
+
+    <!-- RIGHT PANEL: Editor + Console -->
+    <div class="right-panel">
+        <div id="monaco-root"></div>
+        <div class="console-panel" id="console-panel">
+            <div class="console-header" onclick="toggleConsole()">
+                <div class="console-title">
+                    <i class="fa-solid fa-terminal" style="color:var(--text-muted);"></i>
+                    Test Results
+                    <span id="run-spinner" style="display:none;"><div class="spinner"></div></span>
+                </div>
+                <span class="console-toggle" id="console-toggle-icon"><i class="fa-solid fa-chevron-down"></i></span>
+            </div>
+            <div id="tc-tab-bar" class="tc-tabs" style="display:none;"></div>
+            <div class="console-body" id="console-body">
+                <div class="console-idle">Run your code to see results here.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ── Problem Data ──────────────────────────────────────────────────────────
+const problems = [
+    {
+        id: 1, title: "Two Sum", diff: "Easy", topic: "Array",
+        desc: `<p>Given an array of integers <code>nums</code> and an integer <code>target</code>, return <em>indices of the two numbers such that they add up to <code>target</code></em>.</p>
+               <p>You may assume that each input would have exactly one solution, and you may not use the same element twice.</p>
+               <p>You can return the answer in any order.</p>`,
+        examples: [
+            { input: "nums = [2,7,11,15], target = 9", output: "[0,1]", exp: "Because nums[0] + nums[1] == 9, we return [0, 1]." },
+            { input: "nums = [3,2,4], target = 6", output: "[1,2]" }
+        ],
+        constraints: ["2 ≤ nums.length ≤ 10⁴", "-10⁹ ≤ nums[i] ≤ 10⁹", "Only one valid answer exists."],
+        starters: {
+            javascript: `/**\n * @param {number[]} nums\n * @param {number} target\n * @return {number[]}\n */\nfunction twoSum(nums, target) {\n    // Write your solution here\n    \n}`,
+            python: `class Solution:\n    def twoSum(self, nums: list[int], target: int) -> list[int]:\n        # Write your solution here\n        pass`,
+            java: `class Solution {\n    public int[] twoSum(int[] nums, int target) {\n        // Write your solution here\n        return new int[]{};\n    }\n}`,
+            cpp: `class Solution {\npublic:\n    vector<int> twoSum(vector<int>& nums, int target) {\n        // Write your solution here\n        return {};\n    }\n};`
+        },
+        testCases: [
+            { label: "Case 1", run: (fn) => fn([2,7,11,15], 9), expected: [0,1] },
+            { label: "Case 2", run: (fn) => fn([3,2,4], 6), expected: [1,2] },
+            { label: "Case 3", run: (fn) => fn([3,3], 6), expected: [0,1] }
+        ],
+        wrapCode: (code) => { 
+            const f = new Function('return ' + code.replace('function twoSum', 'function _solve'))();
+            return f;
+        }
+    },
+    {
+        id: 2, title: "Contains Duplicate", diff: "Easy", topic: "Array",
+        desc: `<p>Given an integer array <code>nums</code>, return <code>true</code> if any value appears <strong>at least twice</strong> in the array, and return <code>false</code> if every element is distinct.</p>`,
+        examples: [
+            { input: "nums = [1,2,3,1]", output: "true" },
+            { input: "nums = [1,2,3,4]", output: "false" }
+        ],
+        constraints: ["1 ≤ nums.length ≤ 10⁵", "-10⁹ ≤ nums[i] ≤ 10⁹"],
+        starters: {
+            javascript: `/**\n * @param {number[]} nums\n * @return {boolean}\n */\nfunction containsDuplicate(nums) {\n    \n}`,
+            python: `class Solution:\n    def containsDuplicate(self, nums: list[int]) -> bool:\n        pass`,
+            java: `class Solution {\n    public boolean containsDuplicate(int[] nums) {\n        return false;\n    }\n}`,
+            cpp: `class Solution {\npublic:\n    bool containsDuplicate(vector<int>& nums) {\n        return false;\n    }\n};`
+        },
+        testCases: [
+            { label: "Case 1", run: (fn) => fn([1,2,3,1]), expected: true },
+            { label: "Case 2", run: (fn) => fn([1,2,3,4]), expected: false },
+            { label: "Case 3", run: (fn) => fn([1,1,1,3,3,4,3,2,4,2]), expected: true }
+        ],
+        wrapCode: (code) => new Function('return ' + code.replace('function containsDuplicate','function _s'))()
+    },
+    {
+        id: 3, title: "Valid Parentheses", diff: "Easy", topic: "Stack",
+        desc: `<p>Given a string <code>s</code> containing just the characters <code>'('</code>, <code>')'</code>, <code>'{'</code>, <code>'}'</code>, <code>'['</code> and <code>']'</code>, determine if the input string is valid.</p>
+               <p>An input string is valid if open brackets are closed by the same type of brackets, and open brackets are closed in the correct order.</p>`,
+        examples: [
+            { input: 's = "()"', output: "true" },
+            { input: 's = "()[]{}"', output: "true" },
+            { input: 's = "(]"', output: "false" }
+        ],
+        constraints: ["1 ≤ s.length ≤ 10⁴", "s consists of parentheses only '()[]{}'"],
+        starters: {
+            javascript: `/**\n * @param {string} s\n * @return {boolean}\n */\nfunction isValid(s) {\n    \n}`,
+            python: `class Solution:\n    def isValid(self, s: str) -> bool:\n        pass`,
+            java: `class Solution {\n    public boolean isValid(String s) {\n        return false;\n    }\n}`,
+            cpp: `class Solution {\npublic:\n    bool isValid(string s) {\n        return false;\n    }\n};`
+        },
+        testCases: [
+            { label: "Case 1", run: (fn) => fn("()"), expected: true },
+            { label: "Case 2", run: (fn) => fn("()[]{}"), expected: true },
+            { label: "Case 3", run: (fn) => fn("(]"), expected: false }
+        ],
+        wrapCode: (code) => new Function('return ' + code.replace('function isValid','function _s'))()
+    }
+];
+
+// ── State ──────────────────────────────────────────────────────────────────
+let currentIndex = 0;
+let editorInstance = null;
+let consoleOpen = true;
+let userCodes = {}; // Store per-problem, per-language
+
+// ── Init ───────────────────────────────────────────────────────────────────
+function currentProblem() { return problems[currentIndex]; }
+
+function loadProblem(idx) {
+    currentIndex = idx;
+    const p = currentProblem();
+    document.title = `${p.title} | NIETCode`;
+    document.getElementById('prob-counter').textContent = `${idx + 1} / ${problems.length}`;
+    renderDescription();
+    const lang = document.getElementById('lang-select').value;
+    if (editorInstance) {
+        const key = `${p.id}-${lang}`;
+        editorInstance.setValue(userCodes[key] || p.starters[lang] || '');
+    }
+    clearConsole();
+}
+
+function navigateProblem(dir) {
+    const next = currentIndex + dir;
+    if (next >= 0 && next < problems.length) {
+        saveCurrent();
+        loadProblem(next);
+    }
+}
+
+function saveCurrent() {
+    if (!editorInstance) return;
+    const p = currentProblem();
+    const lang = document.getElementById('lang-select').value;
+    userCodes[`${p.id}-${lang}`] = editorInstance.getValue();
+}
+
+function changeLanguage() {
+    saveCurrent();
+    const p = currentProblem();
+    const lang = document.getElementById('lang-select').value;
+    const key = `${p.id}-${lang}`;
+    if (editorInstance) {
+        const model = editorInstance.getModel();
+        monaco.editor.setModelLanguage(model, lang === 'cpp' ? 'cpp' : lang);
+        editorInstance.setValue(userCodes[key] || p.starters[lang] || '');
+    }
+}
+
+// ── Description Render ─────────────────────────────────────────────────────
+function renderDescription() {
+    const p = currentProblem();
+    const badgeClass = { Easy: 'easy-badge', Medium: 'medium-badge', Hard: 'hard-badge' }[p.diff];
+    let html = `
+        <div class="prob-title-row">
+            <span class="prob-title">${p.id}. ${p.title}</span>
+            <span class="diff-badge ${badgeClass}">${p.diff}</span>
+        </div>
+        <div class="prob-desc">${p.desc}</div>
+    `;
+    p.examples.forEach((ex, i) => {
+        html += `
+            <div class="example-label" style="margin-top:18px;">Example ${i + 1}:</div>
+            <div class="example-box">
+                <div><strong>Input:</strong> ${ex.input}</div>
+                <div><strong>Output:</strong> ${ex.output}</div>
+                ${ex.exp ? `<div style="color:var(--text-muted); margin-top:4px;"><strong>Explanation:</strong> ${ex.exp}</div>` : ''}
+            </div>
+        `;
+    });
+    html += `<div class="constraints-section"><h4>Constraints:</h4>`;
+    p.constraints.forEach(c => { html += `<div class="constraint-item">${c}</div>`; });
+    html += `</div>`;
+    document.getElementById('desc-panel').innerHTML = html;
+}
+
+// ── Panel Tabs ─────────────────────────────────────────────────────────────
+function switchPTab(tab, panel) {
+    document.querySelectorAll('.ptab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    ['desc-panel','solution-panel','submissions-panel'].forEach(id => document.getElementById(id).style.display = 'none');
+    const map = { desc: 'desc-panel', solution: 'solution-panel', submissions: 'submissions-panel' };
+    document.getElementById(map[panel]).style.display = '';
+}
+
+// ── Console ────────────────────────────────────────────────────────────────
+function toggleConsole() {
+    const cp = document.getElementById('console-panel');
+    consoleOpen = !consoleOpen;
+    cp.classList.toggle('collapsed', !consoleOpen);
+    document.getElementById('console-toggle-icon').innerHTML = consoleOpen 
+        ? '<i class="fa-solid fa-chevron-down"></i>' 
+        : '<i class="fa-solid fa-chevron-up"></i>';
+}
+
+function clearConsole() {
+    document.getElementById('console-body').innerHTML = '<div class="console-idle">Run your code to see results here.</div>';
+    document.getElementById('tc-tab-bar').style.display = 'none';
+    document.getElementById('tc-tab-bar').innerHTML = '';
+}
+
+// ── Run Code ───────────────────────────────────────────────────────────────
+function runCode() {
+    const lang = document.getElementById('lang-select').value;
+    if (lang !== 'javascript') {
+        document.getElementById('console-body').innerHTML = `<div class="result-line info">⚠ Live execution is only available for JavaScript in this sandbox. Submit for server-side evaluation.</div>`;
+        document.getElementById('tc-tab-bar').style.display = 'none';
+        if (!consoleOpen) toggleConsole();
+        return;
+    }
+
+    saveCurrent();
+    const p = currentProblem();
+    const code = editorInstance.getValue();
+
+    // Show spinner
+    document.getElementById('run-spinner').style.display = '';
+    document.getElementById('console-body').innerHTML = '<div class="console-idle">Running test cases...</div>';
+    document.getElementById('tc-tab-bar').style.display = 'none';
+    if (!consoleOpen) toggleConsole();
+
+    setTimeout(() => {
+        document.getElementById('run-spinner').style.display = 'none';
+        const results = [];
+        let fn;
+        try {
+            fn = p.wrapCode(code);
+            if (typeof fn !== 'function') throw new Error('Could not parse function. Make sure your function is complete.');
+        } catch (e) {
+            document.getElementById('console-body').innerHTML = `<div class="verdict-bar verdict-err"><i class="fa-solid fa-xmark"></i> Syntax Error</div><div class="result-line err">${e.message}</div>`;
+            return;
+        }
+
+        p.testCases.forEach((tc, i) => {
+            try {
+                const out = tc.run(fn);
+                const pass = JSON.stringify(out) === JSON.stringify(tc.expected);
+                results.push({ label: tc.label, pass, output: JSON.stringify(out), expected: JSON.stringify(tc.expected) });
+            } catch (e) {
+                results.push({ label: tc.label, pass: false, output: null, error: e.message, expected: JSON.stringify(tc.expected) });
+            }
+        });
+
+        renderResults(results);
+    }, 500);
+}
+
+function renderResults(results) {
+    const all = results.every(r => r.pass);
+    const tabBar = document.getElementById('tc-tab-bar');
+    const body = document.getElementById('console-body');
+
+    tabBar.style.display = 'flex';
+    tabBar.innerHTML = results.map((r, i) => 
+        `<div class="tc-tab ${r.pass ? 'pass' : 'fail'} ${i === 0 ? 'active' : ''}" onclick="showResult(${i})" data-idx="${i}">
+            <i class="fa-solid fa-${r.pass ? 'check' : 'xmark'}" style="margin-right:4px;font-size:10px;"></i>${r.label}
+        </div>`
+    ).join('');
+
+    window._testResults = results;
+    showResult(0);
+}
+
+window.showResult = function(i) {
+    document.querySelectorAll('.tc-tab').forEach((t, idx) => { t.classList.toggle('active', idx === i); });
+    const r = window._testResults[i];
+    let html = '';
+    if (r.pass) {
+        html += `<div class="verdict-bar verdict-ac"><i class="fa-solid fa-check"></i> Accepted</div>`;
+    } else {
+        html += `<div class="verdict-bar verdict-wa"><i class="fa-solid fa-xmark"></i> Wrong Answer</div>`;
+    }
+    if (r.error) {
+        html += `<div class="result-line err" style="margin-top:8px;"><b>Runtime Error:</b> ${r.error}</div>`;
+    } else {
+        html += `<div class="result-line info" style="margin-top:8px;"><b>Expected:</b> <span style="color:var(--green)">${r.expected}</span></div>`;
+        html += `<div class="result-line info"><b>Output:</b> <span style="color:${r.pass ? 'var(--green)' : 'var(--red)'}">${r.output}</span></div>`;
+    }
+    document.getElementById('console-body').innerHTML = html;
+}
+
+// ── Submit ─────────────────────────────────────────────────────────────────
+function submitCode() {
+    const lang = document.getElementById('lang-select').value;
+    if (lang !== 'javascript') {
+        alert('Server-side submission coming soon. Currently, JS execution is supported.');
+        return;
+    }
+    // Run all cases silently then show verdict
+    saveCurrent();
+    const p = currentProblem();
+    const code = editorInstance.getValue();
+    document.getElementById('run-spinner').style.display = '';
+    if (!consoleOpen) toggleConsole();
+
+    setTimeout(() => {
+        document.getElementById('run-spinner').style.display = 'none';
+        let fn;
+        try { fn = p.wrapCode(code); } catch(e) {
+            document.getElementById('console-body').innerHTML = `<div class="verdict-bar verdict-err"><i class="fa-solid fa-xmark"></i> Compile Error</div><div class="result-line err">${e.message}</div>`;
+            return;
+        }
+        const results = p.testCases.map(tc => {
+            try { const out = tc.run(fn); const pass = JSON.stringify(out) === JSON.stringify(tc.expected); return { label: tc.label, pass, output: JSON.stringify(out), expected: JSON.stringify(tc.expected) }; }
+            catch(e) { return { label: tc.label, pass: false, error: e.message, expected: JSON.stringify(tc.expected) }; }
+        });
+        renderResults(results);
+        // Add to submissions tab
+        const allPass = results.every(r => r.pass);
+        const submissionsPanel = document.getElementById('submissions-panel');
+        const entry = document.createElement('div');
+        entry.style.cssText = 'padding:12px; border-radius:8px; background:var(--surface2); border:1px solid var(--border); margin-bottom:10px;';
+        entry.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-weight:700; color:${allPass ? 'var(--green)' : 'var(--red)'};">${allPass ? '✓ Accepted' : '✗ Wrong Answer'}</span>
+                <span style="font-size:12px; color:var(--text-muted);">${new Date().toLocaleTimeString()}</span>
+            </div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">${document.getElementById('lang-select').value} · ${results.filter(r=>r.pass).length}/${results.length} test cases passed</div>
+        `;
+        if (submissionsPanel.querySelector('p')) submissionsPanel.innerHTML = '';
+        submissionsPanel.prepend(entry);
+    }, 800);
+}
+
+// ── Monaco Setup ───────────────────────────────────────────────────────────
+require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs' }});
+require(['vs/editor/editor.main'], () => {
+    // Dark theme matching our palette
+    monaco.editor.defineTheme('nietdark', {
+        base: 'vs-dark',
+        inherit: true,
+        rules: [
+            { token: 'keyword', foreground: 'ff7b72' },
+            { token: 'string', foreground: 'a5d6ff' },
+            { token: 'number', foreground: 'f2cc60' },
+            { token: 'comment', foreground: '8b949e', fontStyle: 'italic' },
+        ],
+        colors: {
+            'editor.background': '#0d1117',
+            'editor.lineHighlightBackground': '#161b22',
+            'editorLineNumber.foreground': '#30363d',
+            'editorLineNumber.activeForeground': '#8b949e',
+            'editor.selectionBackground': '#264f78',
+            'editorCursor.foreground': '#ffa116',
+        }
+    });
+
+    const p = currentProblem();
+    editorInstance = monaco.editor.create(document.getElementById('monaco-root'), {
+        value: p.starters.javascript,
+        language: 'javascript',
+        theme: 'nietdark',
+        fontSize: 14,
+        fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
+        fontLigatures: true,
+        minimap: { enabled: false },
+        lineNumbers: 'on',
+        scrollBeyondLastLine: false,
+        renderLineHighlight: 'line',
+        padding: { top: 16, bottom: 16 },
+        automaticLayout: true,
+        tabSize: 4,
+    });
+    renderDescription();
+});
+
+// ── Drag Resize ────────────────────────────────────────────────────────────
+const handle = document.getElementById('resize-handle');
+const leftPanel = document.getElementById('left-panel');
+let dragging = false, startX, startW;
+
+handle.addEventListener('mousedown', e => {
+    dragging = true; startX = e.clientX; startW = leftPanel.offsetWidth;
+    document.body.style.cursor = 'col-resize'; document.body.style.userSelect = 'none';
+});
+document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const newW = Math.max(260, Math.min(700, startW + e.clientX - startX));
+    leftPanel.style.width = newW + 'px';
+});
+document.addEventListener('mouseup', () => {
+    dragging = false; document.body.style.cursor = ''; document.body.style.userSelect = '';
+});
+
+// ── URL param loading (e.g. Editor.html?id=2) ─────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(location.search);
+    const id = parseInt(params.get('id'));
+    if (id) {
+        const idx = problems.findIndex(p => p.id === id);
+        if (idx !== -1) { currentIndex = idx; }
+    }
+    // description render happens after monaco init
+});
+</script>
+</body>
+</html>

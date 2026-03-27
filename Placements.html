@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIETCode | Placements 2026</title>
+    <meta name="description" content="Batch 2026 Placement Statistics for NIET - Companies, Roles, Packages and DSA Questions Asked">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <style>
+        :root{--orange:#ffa116;--orange-glow:rgba(255,161,22,0.25);--orange-dim:rgba(255,161,22,0.08);--bg:#080b10;--bg2:#0d1117;--surface:#111820;--surface2:#182030;--border:#1e2d40;--border2:#243040;--text:#e8f0fe;--text-muted:#6b7f99;--text-soft:#9ab0cc;--green:#00d4aa;--blue:#4d9fff;--red:#ff5757;--purple:#a78bfa;--yellow:#ffce56}
+        *{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+
+        /* NAVBAR */
+        .navbar{position:fixed;top:0;left:0;right:0;z-index:1000;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;background:rgba(8,11,16,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);transition:border-color .3s}
+        .nav-brand{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--orange);text-decoration:none;letter-spacing:-.5px}.nav-brand span{color:var(--text)}
+        .nav-links{display:flex;gap:36px;align-items:center}
+        .nav-link{background:none;border:none;font-family:inherit;text-decoration:none;color:var(--text-muted);font-size:14px;font-weight:500;transition:color .2s;cursor:pointer;padding:0}.nav-link:hover,.nav-link.active{color:var(--text)}
+        .nav-right{display:flex;gap:12px;align-items:center;min-width:180px;justify-content:flex-end}
+        .nav-skeleton{display:flex;gap:10px;align-items:center}.skel{background:var(--surface2);border-radius:8px;animation:skel-pulse 1.2s ease-in-out infinite}.skel-btn{width:72px;height:32px}.skel-pill{width:130px;height:32px;border-radius:10px}
+        @keyframes skel-pulse{0%,100%{opacity:.4}50%{opacity:.8}}
+        .btn-ghost{padding:8px 18px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--text-soft);font-size:13px;font-weight:500;cursor:pointer;text-decoration:none;transition:.2s;font-family:inherit;display:inline-flex;align-items:center}.btn-ghost:hover{border-color:var(--orange);color:var(--orange)}
+        .btn-cta{padding:8px 20px;border-radius:8px;border:none;background:var(--orange);color:#000;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:.2s;font-family:inherit;display:inline-flex;align-items:center}.btn-cta:hover{filter:brightness(1.1);transform:translateY(-1px)}
+        .profile-wrap{position:relative}.user-pill{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:5px 14px 5px 6px;cursor:pointer;transition:.2s;user-select:none}.user-pill:hover{border-color:var(--orange)}
+        .user-avatar{width:32px;height:32px;border-radius:8px;background:var(--orange);color:#000;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;font-family:'Syne',sans-serif;flex-shrink:0}
+        .user-name{font-size:13px;font-weight:600;color:var(--text);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .pill-chevron{color:var(--text-muted);font-size:10px;transition:transform .2s}.profile-wrap.open .pill-chevron{transform:rotate(180deg)}
+        .profile-dropdown{position:absolute;top:calc(100% + 8px);right:0;width:280px;background:var(--surface);border:1px solid var(--border2);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5);opacity:0;visibility:hidden;transform:translateY(-8px);transition:opacity .2s,transform .2s,visibility .2s;z-index:200;overflow:hidden}.profile-wrap.open .profile-dropdown{opacity:1;visibility:visible;transform:translateY(0)}
+        .dd-header{padding:18px 18px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}.dd-avatar{width:44px;height:44px;border-radius:12px;background:var(--orange);color:#000;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;font-family:'Syne',sans-serif;flex-shrink:0}
+        .dd-info{flex:1;min-width:0}.dd-name{font-size:15px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dd-email{font-size:12px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .dd-menu{padding:6px 0}.dd-item{display:flex;align-items:center;gap:12px;padding:11px 18px;font-size:14px;font-weight:500;color:var(--text-soft);cursor:pointer;transition:.15s;border:none;background:none;width:100%;text-align:left;font-family:inherit;text-decoration:none}.dd-item:hover{background:var(--surface2);color:var(--text)}.dd-item i{width:18px;text-align:center;font-size:14px;color:var(--text-muted)}.dd-item:hover i{color:var(--orange)}
+        .dd-divider{height:1px;background:var(--border);margin:4px 0}.dd-item.dd-danger{color:var(--red)}.dd-item.dd-danger i{color:var(--red)}.dd-item.dd-danger:hover{background:rgba(248,81,73,.08)}
+
+        /* AUTH GATE */
+        .auth-gate{display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);align-items:center;justify-content:center}.auth-gate.show{display:flex}
+        .gate-card{background:var(--surface);border:1px solid var(--border2);border-radius:18px;padding:44px 40px;max-width:380px;width:90%;text-align:center;animation:popIn .3s cubic-bezier(.16,1,.3,1);box-shadow:0 30px 80px rgba(0,0,0,.6)}
+        @keyframes popIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+        .gate-icon{font-size:40px;margin-bottom:18px}.gate-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:10px}.gate-sub{font-size:14px;color:var(--text-soft);line-height:1.6;margin-bottom:28px}
+        .gate-btn-primary{display:block;width:100%;padding:13px;border-radius:10px;background:var(--orange);color:#000;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;text-decoration:none;margin-bottom:10px}.gate-btn-primary:hover{filter:brightness(1.1)}
+        .gate-btn-cancel{display:block;width:100%;padding:11px;border-radius:10px;background:transparent;border:1px solid var(--border2);color:var(--text-muted);font-size:14px;cursor:pointer;font-family:inherit;transition:.2s}.gate-btn-cancel:hover{border-color:var(--text-muted);color:var(--text)}
+
+        /* HERO */
+        .place-hero{padding:120px 48px 60px;text-align:center;position:relative;overflow:hidden}
+        .place-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(255,161,22,.1) 0%,transparent 65%);pointer-events:none}
+        .place-hero .section-tag{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--orange);margin-bottom:16px}.place-hero .section-tag::before{content:'';width:20px;height:1px;background:var(--orange)}
+        .place-hero h1{font-family:'Syne',sans-serif;font-size:clamp(36px,5vw,64px);font-weight:800;line-height:1.1;letter-spacing:-2px;margin-bottom:16px}
+        .place-hero h1 .grad{background:linear-gradient(135deg,var(--orange),var(--yellow),var(--orange));background-size:200%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s linear infinite}
+        @keyframes shimmer{0%{background-position:0%}100%{background-position:200%}}
+        .place-hero p{font-size:17px;color:var(--text-soft);max-width:600px;margin:0 auto 40px;line-height:1.7}
+
+        /* STAT CARDS */
+        .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;max-width:1100px;margin:0 auto 60px;padding:0 48px}
+        .scard{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px 24px;text-align:center;transition:.3s;cursor:default}
+        .scard:hover{border-color:var(--orange);transform:translateY(-3px);box-shadow:0 12px 40px rgba(255,161,22,.08)}
+        .scard-num{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;line-height:1;margin-bottom:6px}
+        .scard-label{font-size:13px;color:var(--text-muted)}
+
+        /* CONTROLS */
+        .controls{max-width:1400px;margin:0 auto 24px;padding:0 48px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+        .search-box{flex:1;min-width:220px;position:relative}
+        .search-box input{width:100%;padding:11px 16px 11px 42px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:.2s}
+        .search-box input:focus{border-color:var(--orange);box-shadow:0 0 0 3px var(--orange-dim)}
+        .search-box i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:14px}
+        .filter-select{padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-family:inherit;cursor:pointer;outline:none;transition:.2s;min-width:140px}
+        .filter-select:focus{border-color:var(--orange)}
+        .result-count{font-size:13px;color:var(--text-muted);margin-left:auto;white-space:nowrap}
+
+        /* TABLE */
+        .table-wrap{max-width:1400px;margin:0 auto;padding:0 48px 80px;overflow-x:auto}
+        .place-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;min-width:1000px}
+        .place-table thead{background:var(--surface2)}
+        .place-table th{padding:14px 16px;font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;transition:.2s}
+        .place-table th:hover{color:var(--orange)}
+        .place-table th i{margin-left:4px;font-size:10px}
+        .place-table td{padding:13px 16px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;transition:background .15s}
+        .place-table tbody tr:hover td{background:var(--surface2)}
+        .place-table tbody tr:last-child td{border-bottom:none}
+        .company-name{font-weight:600;color:var(--text);white-space:nowrap}
+        .role-badge{display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;background:rgba(77,159,255,.1);color:var(--blue);white-space:nowrap}
+        .pkg-text{font-weight:700;color:var(--green);white-space:nowrap}
+        .stipend-text{color:var(--yellow);white-space:nowrap}
+        .placed-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700}
+        .placed-yes{background:rgba(0,212,170,.1);color:var(--green)}
+        .placed-zero{background:rgba(255,87,87,.1);color:var(--red)}
+        .placed-pending{background:rgba(167,139,250,.1);color:var(--purple)}
+        .placed-ongoing{background:rgba(255,206,86,.1);color:var(--yellow)}
+        .dsa-tags{display:flex;flex-wrap:wrap;gap:4px;max-width:220px}
+        .dsa-tag{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;background:var(--orange-dim);color:var(--orange);white-space:nowrap}
+        .loc-text{color:var(--text-soft);font-size:12px;white-space:nowrap}
+        .date-text{color:var(--text-muted);font-size:12px;white-space:nowrap}
+
+        /* FOOTER */
+        footer{padding:40px 48px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+        .footer-brand{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--orange)}.footer-brand span{color:var(--text-muted)}
+        .footer-copy{font-size:13px;color:var(--text-muted)}
+        .footer-links{display:flex;gap:24px}.footer-link{font-size:13px;color:var(--text-muted);transition:color .2s;cursor:pointer;background:none;border:none;font-family:inherit;text-decoration:none;padding:0}.footer-link:hover{color:var(--text)}
+
+        /* REVEAL */
+        .reveal{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease}.reveal.visible{opacity:1;transform:translateY(0)}
+        .reveal-delay-1{transition-delay:.1s}.reveal-delay-2{transition-delay:.2s}.reveal-delay-3{transition-delay:.3s}
+
+        /* RESPONSIVE */
+        @media(max-width:900px){
+            .navbar{padding:0 20px}.nav-links{display:none}
+            .stats-row{grid-template-columns:repeat(2,1fr);padding:0 20px}
+            .place-hero{padding:100px 20px 40px}
+            .controls{padding:0 20px}.table-wrap{padding:0 20px 60px}
+            footer{padding:30px 20px;flex-direction:column;text-align:center}
+        }
+        @media(max-width:500px){.stats-row{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+
+<!-- AUTH GATE -->
+<div class="auth-gate" id="auth-gate">
+    <div class="gate-card">
+        <div class="gate-icon">🔐</div>
+        <div class="gate-title">Login Required</div>
+        <div class="gate-sub">You need to be signed in to access this page. It's free and takes 30 seconds!</div>
+        <button class="gate-btn-primary" onclick="gateLogin()"><i class="fa-solid fa-right-to-bracket"></i> &nbsp;Sign In / Sign Up</button>
+        <button class="gate-btn-cancel" onclick="closeGate()">Maybe later</button>
+    </div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+    <a href="Explore.html" class="nav-brand">NIET<span>Code</span></a>
+    <div class="nav-links">
+        <a href="Explore.html" class="nav-link">Explore</a>
+        <button class="nav-link" onclick="guardedNav('Problems.html')">Problems</button>
+        <a href="Placements.html" class="nav-link active">Placements</a>
+        <button class="nav-link" onclick="guardedNav('Profile.html')">Profile</button>
+    </div>
+    <div class="nav-right" id="nav-right">
+        <div class="nav-skeleton"><div class="skel skel-btn"></div><div class="skel skel-pill"></div></div>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="place-hero">
+    <div class="section-tag">Batch 2026</div>
+    <h1 class="reveal">Placement <span class="grad">Dashboard</span></h1>
+    <p class="reveal">Track every company that visited NIET, roles offered, packages, and the DSA topics asked in coding rounds.</p>
+</section>
+
+<!-- STATS -->
+<div class="stats-row" id="stats-row"></div>
+
+<!-- CONTROLS -->
+<div class="controls reveal">
+    <div class="search-box">
+        <i class="fa-solid fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Search company, role, or DSA topic...">
+    </div>
+    <select class="filter-select" id="locationFilter"><option value="">All Locations</option></select>
+    <select class="filter-select" id="statusFilter">
+        <option value="">All Status</option>
+        <option value="placed">Placed (1+)</option>
+        <option value="zero">0 Placed</option>
+        <option value="pending">Pending / Ongoing</option>
+    </select>
+    <span class="result-count" id="resultCount"></span>
+</div>
+
+<!-- TABLE -->
+<div class="table-wrap reveal">
+    <table class="place-table" id="placeTable">
+        <thead>
+            <tr>
+                <th onclick="sortTable(0)">Date <i class="fa-solid fa-sort"></i></th>
+                <th onclick="sortTable(1)">Company <i class="fa-solid fa-sort"></i></th>
+                <th onclick="sortTable(2)">Role <i class="fa-solid fa-sort"></i></th>
+                <th>Location</th>
+                <th onclick="sortTable(4)">Stipend <i class="fa-solid fa-sort"></i></th>
+                <th onclick="sortTable(5)">Package <i class="fa-solid fa-sort"></i></th>
+                <th onclick="sortTable(6)">Placed <i class="fa-solid fa-sort"></i></th>
+                <th>DSA Topics Asked</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+</div>
+
+<!-- FOOTER -->
+<footer>
+    <div class="footer-brand">NIET<span>Code</span></div>
+    <div class="footer-copy">© 2025 NIETCode. Built for NIET students.</div>
+    <div class="footer-links">
+        <a href="Explore.html" class="footer-link">Explore</a>
+        <button class="footer-link" onclick="guardedNav('Problems.html')">Problems</button>
+        <a href="Placements.html" class="footer-link">Placements</a>
+        <button class="footer-link" onclick="guardedNav('Profile.html')">Profile</button>
+    </div>
+</footer>
+
+<script>
+// ═══════════ AUTH (same pattern as Explore.html) ═══════════
+let currentUser = null;
+let _authResolve;
+const authReady = new Promise(r => { _authResolve = r; });
+
+window.closeGate = () => document.getElementById('auth-gate').classList.remove('show');
+window.gateLogin = async () => { await authReady; const u = firebase?.auth?.()?.currentUser || currentUser; if(u){closeGate();window.location.href='Problems.html'}else{window.location.href='Login.html'} };
+window.guardedNav = async page => { await authReady; const u = firebase?.auth?.()?.currentUser || currentUser; if(u) window.location.href=page; else document.getElementById('auth-gate').classList.add('show'); };
+document.getElementById('auth-gate').addEventListener('click', function(e){ if(e.target===this) closeGate(); });
+
+function updateNavbar(user){
+    const nr=document.getElementById('nav-right');
+    if(user){const i=(user.displayName||user.email).charAt(0).toUpperCase(),n=user.displayName||user.email.split('@')[0],e=user.email||'';
+        nr.innerHTML=`<div class="profile-wrap" id="profile-wrap"><div class="user-pill" onclick="toggleProfileDropdown()"><div class="user-avatar">${i}</div><span class="user-name">${n}</span><i class="fa-solid fa-chevron-down pill-chevron"></i></div><div class="profile-dropdown"><div class="dd-header"><div class="dd-avatar">${i}</div><div class="dd-info"><div class="dd-name">${n}</div><div class="dd-email">${e}</div></div></div><div class="dd-menu"><a href="Profile.html" class="dd-item"><i class="fa-regular fa-user"></i> My Profile</a><a href="Problems.html" class="dd-item"><i class="fa-solid fa-code"></i> My Submissions</a><div class="dd-divider"></div><button class="dd-item dd-danger" onclick="window.doSignOut()"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button></div></div></div>`;
+    } else { nr.innerHTML=`<a href="Login.html" class="btn-ghost">Log in</a><a href="Login.html" class="btn-cta">Get Started</a>`; }
+}
+function toggleProfileDropdown(){const w=document.getElementById('profile-wrap');if(w)w.classList.toggle('open')}
+document.addEventListener('click',e=>{const w=document.getElementById('profile-wrap');if(w&&!w.contains(e.target))w.classList.remove('open')});
+
+function initFirebase(){
+    if(typeof firebase==='undefined'||!firebase.initializeApp)return false;
+    try{if(!firebase.apps.length)firebase.initializeApp({apiKey:"AIzaSyBvS473QS25-jvd_zm4VmOA5UX4yIbvytU",authDomain:"niet-code.firebaseapp.com",projectId:"niet-code",storageBucket:"niet-code.firebasestorage.app",messagingSenderId:"331564337114",appId:"1:331564337114:web:56c072292a02d8fc4422e3"});
+    firebase.auth().onAuthStateChanged(u=>{currentUser=u;updateNavbar(u);_authResolve();if(u)closeGate();else window.location.href='Login.html'});
+    window.doSignOut=()=>firebase.auth().signOut();return true;
+    }catch(e){return false}
+}
+if(!initFirebase()){let a=0;const iv=setInterval(()=>{a++;if(initFirebase()){clearInterval(iv)}else if(a>=6){clearInterval(iv);_authResolve();updateNavbar(null);window.location.href='Login.html'}},500)}
+
+// ═══════════ PLACEMENT DATA (only visited companies) ═══════════
+const data = [
+    ["21-02-2025","Vivnovation","Vivnovator","PAN India","15,000","20 LPA","2",["Arrays","Strings","HashMap"]],
+    ["23-04-2025","Juspay Technologies","SDE","Bangalore","40,000","27 LPA","3",["Trees","Graphs","DP","Greedy"]],
+    ["23-04-2025","Juspay Technologies","PE","Bangalore","40,000","21 LPA","4",["Graphs","BFS/DFS","Trees"]],
+    ["23-04-2025","Juspay Technologies","Product Design","Bangalore","40,000","19 LPA","0",["System Design","Trees"]],
+    ["23-04-2025","Juspay Technologies","PSE","Bangalore","30,000","11 LPA","4",["Arrays","Strings","Sorting"]],
+    ["23-04-2025","Josh Technology Group","Software Developer","Gurugram","22,500","15,23,200","1",["Arrays","DP","Recursion"]],
+    ["23-04-2025","Josh Technology Group","Software Quality Analyst","Gurugram","20,000","6,03,600","1",["Strings","Arrays","Sorting"]],
+    ["23-04-2025","Josh Technology Group","Front End Developer","Gurugram","22,500","12,93,300","1",["Arrays","Strings","Stacks"]],
+    ["28-05-2025","Coforge","—","PAN India","—","4 LPA + 25,000","35",["Arrays","Strings","Basic DSA"]],
+    ["31-05-2025","DeltaX","Associate Product Engineer","Bangalore, Hyderabad, Pune","—","7 LPA","4",["Arrays","HashMap","Sorting"]],
+    ["12-06-2025","Meritto","Operational","Gurugram","15,000","4 LPA","15 - 20",["Arrays","Strings"]],
+    ["19-06-2025","EZ Lab Private Limited","Backend Developer Intern","Gurugram","15,000 - 18,000","upto 5 LPA","1",["Arrays","Linked List","Stacks"]],
+    ["19-06-2025","EZ Lab Private Limited","Data Science Intern","Gurugram","15,000 - 18,000","upto 5 LPA","1",["Arrays","Sorting","Searching"]],
+    ["02-07-2025","Argusoft","Programmer Analyst","Gujarat","21,000","7.12 LPA","—",["Arrays","Strings","OOP"]],
+    ["03-07-2025","Consat Orahi","QA Intern","Gurugram","15,000","upto 4.2 LPA","0",["Arrays","Strings"]],
+    ["03-07-2025","Consat Orahi","Frontend React Intern","Gurugram","15,000","upto 4.2 LPA","0",["Arrays","Strings"]],
+    ["03-07-2025","Consat Orahi","Backend Python Intern","Gurugram","15,000","upto 4.2 LPA","0",["Arrays","Strings","Stacks"]],
+    ["03-07-2025","Consat Orahi","Operations","Gurugram","15,000","upto 4.2 LPA","0",["Aptitude","Logical"]],
+    ["03-07-2025","Consat Orahi","AI","Gurugram","15,000","upto 5 LPA","0",["Arrays","Matrices","Sorting"]],
+    ["03-07-2025","Consat Orahi","UI/UX Intern","Gurugram","15,000","upto 4.2 LPA","0",["Aptitude","Logical"]],
+    ["09-07-2025","OneBanc","Android Developer","Gurugram","30,000","8 LPA","0",["Arrays","Trees","HashMap"]],
+    ["09-07-2025","OneBanc","iOS Developer","Gurugram","30,000","8 LPA","0",["Arrays","Linked List","Stacks"]],
+    ["09-07-2025","OneBanc","Full Stack Developer","Gurugram","30,000","8 LPA","0",["Arrays","Strings","DP"]],
+    ["09-07-2025","OneBanc","UI/UX Designer","Gurugram","30,000","8 LPA","0",["Aptitude","Logical"]],
+    ["09-07-2025","OneBanc","Data Science","Gurugram","30,000","8 LPA","0",["Arrays","Sorting","Searching"]],
+    ["28-07-2025","CVENT","Associate Product Consultant","—","25,000","6 LPA","0",["Arrays","Strings","HashMap"]],
+    ["01-08-2025","Razorpay","PSE","Bangalore","50,000","8 LPA","4",["Trees","Graphs","DP","Greedy"]],
+    ["07-08-2025","Cognizant","GenC","PAN India","—","4 LPA","170",["Arrays","Strings","Basic DSA"]],
+    ["07-08-2025","Cognizant","GenC Pro","PAN India","—","5.40 LPA","23 (Combined)",["Arrays","Sorting","Stacks"]],
+    ["07-08-2025","Cognizant","GenC Next","PAN India","—","6.75 LPA","23 (Combined)",["Arrays","Trees","DP"]],
+    ["13-08-2025","CVENT","Associate Product Consultant","—","25,000","6 LPA","12",["Arrays","Strings","HashMap"]],
+    ["18-08-2025","Xcelore","AI/ML Engineer – Trainee","Noida","15,000","4 - 5 LPA","0",["Arrays","Matrices"]],
+    ["18-08-2025","Xcelore","JVM Engineer – Trainee","Noida","15,000","4 - 5 LPA","0",["Arrays","OOP","Stacks"]],
+    ["18-08-2025","Xcelore","JavaScript/UI Engineer – Trainee","Noida","15,000","4 - 5 LPA","0",["Arrays","Strings"]],
+    ["18-08-2025","Xcelore","DevOps Engineer – Trainee","Noida","15,000","4 - 5 LPA","0",["Arrays","Strings"]],
+    ["18-08-2025","Xcelore","Mobile & Smart TV App Developer – Trainee","Noida","15,000","4 - 5 LPA","0",["Arrays","Linked List"]],
+    ["18-08-2025","Xcelore","IoT Engineer – Trainee","Noida","15,000","4 - 5 LPA","0",["Arrays","Strings"]],
+    ["18-08-2025","Xcelore","Quality Assurance Engineer – Trainee","Noida","15,000","4 - 5 LPA","0",["Arrays","Sorting"]],
+    ["18-08-2025","Xcelore","Project Coordinator – Trainee","Noida","15,000","4 - 5 LPA","0",["Aptitude","Logical"]],
+    ["18-08-2025","Xcelore","HR / IT / Admin – Trainee","Noida","15,000","4 - 5 LPA","0",["Aptitude","Logical"]],
+    ["18-08-2025","Xcelore","Business Development Executive – Trainee","Noida","15,000","4 - 5 LPA","0",["Aptitude","Logical"]],
+    ["26-08-2025","EPAM","Developer","Hyderabad","27,500","8.48 LPA","10",["Arrays","Strings","Trees","DP"]],
+    ["02-09-2025","Capgemini","Analyst","PAN India","—","4 LPA + 25,000","229",["Arrays","Strings","Sorting"]],
+    ["02-09-2025","Capgemini","Analyst (Differential Hiring)","PAN India","—","5.50 LPA + 25,000","32",["Arrays","Strings","Sorting","Stacks"]],
+    ["02-09-2025","Capgemini","Senior Analyst","PAN India","—","7.25 LPA + 25,000","7",["Trees","DP","Graphs"]],
+    ["03-09-2025","Bangmetric","Tech Intern","Noida","10,000 - 20,000","3.5 - 6 LPA","9",["Arrays","Strings"]],
+    ["04-09-2025","HashedIn by Deloitte","Software Engineer","Gurgaon","25,000","8.1 LPA","1",["Arrays","Trees","Graphs","DP"]],
+    ["04-09-2025","Josh Technology Group","Associate Software Developer","Gurugram","22,500","11,58,000","1",["Arrays","DP","Recursion"]],
+    ["06-09-2025","LTIMindtree","Graduate Engineer Trainee","PAN India","25,000","4,05,233","202",["Arrays","Strings","Basic DSA"]],
+    ["11-09-2025","Accenture","Associate Software Engineer","PAN India","—","3,45,000 - 4,44,280","150 (Combined)",["Arrays","Strings","Sorting"]],
+    ["11-09-2025","Accenture","Advanced Associate Software Engineer","PAN India","—","4,90,000 - 6,28,140","150 (Combined)",["Arrays","Trees","DP"]],
+    ["11-09-2025","Accenture","Advanced Application Engineer","PAN India","—","—","0",["Trees","Graphs","DP"]],
+    ["23-09-2025","Vortexify Solutions","Salesforce Developer","Noida","20,000","4 LPA","4",["Arrays","Strings"]],
+    ["27-09-2025","Think41","Full Stack Engineer","Bengaluru, Karnataka","25,000","5.5 - 7 LPA","0",["Arrays","Stacks","Queues"]],
+    ["29-09-2025","Webkul","Trainee Software Analyst - Python","Noida","23,500","4.2 LPA","20",["Arrays","Strings","Sorting"]],
+    ["08-10-2025","Jakson Group","GET","Noida","20,000","6 LPA","4",["Arrays","Strings","Basic DSA"]],
+    ["09-10-2025","Razorpay","PSE","Bangalore","50,000","8 LPA","5",["Trees","Graphs","DP","Greedy"]],
+    ["13-10-2025","Crowe","ERP Technical Intern","Noida","21,500","5 LPA + 1 Lakh","3",["Arrays","Strings","SQL"]],
+    ["14-10-2025","TCS","Ninja","PAN India","—","3.46 LPA","187 (Combined)",["Arrays","Strings","Basic DSA"]],
+    ["14-10-2025","TCS","Digital","PAN India","—","7.09 LPA","187 (Combined)",["Arrays","Trees","Sorting"]],
+    ["14-10-2025","TCS","Prime","PAN India","—","9.09 LPA","0",["Trees","Graphs","DP"]],
+    ["19-10-2025","MAQ Software","Associate Software Engineer","Noida","25,000","6 LPA","15",["Arrays","Strings","DP","Trees"]],
+    ["30-10-2025","IBM (Only Girls)","Associate System Engineer","Bangalore","20,000","4.5 LPA + 25,000","1",["Arrays","Strings","Sorting"]],
+    ["31-10-2025","Internet Research Bureau (Only Boys)","Trainee Survey Programmer","Noida","18,000","4 LPA","4",["Arrays","Strings"]],
+    ["04-11-2025","Primathon Technology Ventures Pvt Ltd","Associate Software Developer","Gurugram","15,000","5 - 6 LPA","3",["Arrays","Strings","Linked List"]],
+    ["06-11-2025","AppVin Technology","Software Developer Trainee","Noida","15,000","4 LPA + 1 Lakh","Pending",["Arrays","Strings","Stacks"]],
+    ["06-11-2025","AppVin Technology","Software Developer Trainee","Noida","15,000","4 LPA + 1 Lakh","0",["Arrays","Strings","Stacks"]],
+    ["07-11-2025","Publicis Sapient","Junior Associate Technology","Gurugram","30,500","5.10 LPA","3",["Arrays","Trees","HashMap"]],
+    ["07-11-2025","Zangoh","Software Engineer Intern: GenerativeAI","Indore","20,000","5,33,400","2",["Arrays","Strings","DP"]],
+    ["12-11-2025","RedDoorz","Entry-Level Software Engineer","Noida","20,000","6 LPA","2",["Arrays","Strings","Trees"]],
+    ["01-12-2025","Indus Valley Partners","IT Engineer","Noida","—","4.71 LPA","10",["Arrays","Strings","SQL"]],
+    ["01-12-2025","Nucleus Software","Assistant Software Engineer","Noida","30,000","5,08,658","5",["Arrays","Sorting","Stacks"]],
+    ["04-12-2025","Sasken Technologies","—","—","—","—","Pending",["Arrays","Strings"]],
+    ["10-12-2025","HummingBird Technologies","Java Backend Developer","Pune","30,000","9 LPA","0",["Arrays","Trees","HashMap"]],
+    ["27-01-2026","Josh Technology Group","Inside Sales Strategist","Gurugram","18,000","3.75 LPA","—",["Aptitude","Logical"]],
+    ["31-01-2026","iqigai.ai by Fractal Analytics","Data Engineering","PAN India","—","5 - 6 LPA","Ongoing",["Arrays","Sorting","DP"]],
+    ["10-02-2026","Infogain","Associate Software Engineer","Noida","10,000 - 20,000","4.34 LPA","Ongoing",["Arrays","Strings","Stacks"]],
+    ["11-02-2026","Optimus Information Inc. (Only Girls)","Software Engineer Trainee","Noida","15,000 - 20,000","6 LPA","1",["Arrays","Strings","HashMap"]],
+    ["14-02-2026","MyAnatomy","Techno-Sales Intern","Noida","20,000","4 - 6 LPA","1 + Ongoing",["Arrays","Aptitude"]],
+    ["24-02-2026","Amadeus India Pvt. Ltd","SDE","Bangalore","30,000","12.75 LPA","Ongoing",["Trees","Graphs","DP","Stacks"]],
+    ["25-02-2026","Juspay Technologies","SDE - Frontend","Bangalore","40,000","27 LPA","Ongoing",["Trees","Graphs","DP"]],
+    ["25-02-2026","Juspay Technologies","SDE - Backend","Bangalore","40,000","27 LPA","Ongoing",["Trees","Graphs","DP"]],
+    ["25-02-2026","Juspay Technologies","PE","Bangalore","40,000","21 LPA","Ongoing",["Graphs","BFS/DFS","Trees"]],
+    ["18-03-2026","Jayanita Exports Pvt. Ltd","Frontend Intern (React JS)","Greater Noida","18,000","4.2 - 4.8 LPA","1",["Arrays","Strings"]],
+    ["18-03-2026","Jayanita Exports Pvt. Ltd","AI/ML Intern (Python)","Greater Noida","18,000","4.2 - 4.8 LPA","1",["Arrays","Matrices","Sorting"]],
+];
+
+// ═══════════ RENDER ═══════════
+let sortCol = -1, sortAsc = true;
+
+function getPlacedClass(v) {
+    const s = String(v).toLowerCase();
+    if (s==='pending'||s.includes('pending')) return 'placed-pending';
+    if (s==='ongoing'||s.includes('ongoing')) return 'placed-ongoing';
+    if (s==='0') return 'placed-zero';
+    if (s==='—'||s==='') return 'placed-pending';
+    return 'placed-yes';
+}
+
+function renderTable(rows) {
+    const tb = document.getElementById('tableBody');
+    tb.innerHTML = rows.map(r => {
+        const dsaTags = (r[7]||[]).map(t => `<span class="dsa-tag">${t}</span>`).join('');
+        return `<tr>
+            <td><span class="date-text">${r[0]}</span></td>
+            <td><span class="company-name">${r[1]}</span></td>
+            <td><span class="role-badge">${r[2]}</span></td>
+            <td><span class="loc-text">${r[3]}</span></td>
+            <td><span class="stipend-text">${r[4]}</span></td>
+            <td><span class="pkg-text">${r[5]}</span></td>
+            <td><span class="placed-badge ${getPlacedClass(r[6])}">${r[6]}</span></td>
+            <td><div class="dsa-tags">${dsaTags}</div></td>
+        </tr>`;
+    }).join('');
+    document.getElementById('resultCount').textContent = `${rows.length} entries`;
+}
+
+function filterData() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const loc = document.getElementById('locationFilter').value;
+    const status = document.getElementById('statusFilter').value;
+    let rows = data.filter(r => {
+        if (q && !(r[1].toLowerCase().includes(q) || r[2].toLowerCase().includes(q) || (r[7]||[]).some(t=>t.toLowerCase().includes(q)))) return false;
+        if (loc && !r[3].toLowerCase().includes(loc.toLowerCase())) return false;
+        if (status) {
+            const s = String(r[6]).toLowerCase();
+            if (status==='placed' && (s==='0'||s==='—'||s.includes('pending')||s.includes('ongoing'))) return false;
+            if (status==='zero' && s!=='0') return false;
+            if (status==='pending' && !s.includes('pending') && !s.includes('ongoing')) return false;
+        }
+        return true;
+    });
+    renderTable(rows);
+}
+
+function sortTable(col) {
+    if (sortCol === col) sortAsc = !sortAsc; else { sortCol = col; sortAsc = true; }
+    data.sort((a,b) => {
+        let va=a[col], vb=b[col];
+        if (col===0) { va=new Date(va.split('-').reverse().join('-')); vb=new Date(vb.split('-').reverse().join('-')); return sortAsc?va-vb:vb-va; }
+        return sortAsc ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
+    });
+    filterData();
+}
+
+// Populate location filter
+const locs = [...new Set(data.map(r=>r[3]).filter(l=>l&&l!=='—'))].sort();
+const lf = document.getElementById('locationFilter');
+locs.forEach(l => { const o=document.createElement('option'); o.value=l; o.textContent=l; lf.appendChild(o); });
+
+document.getElementById('searchInput').addEventListener('input', filterData);
+document.getElementById('locationFilter').addEventListener('change', filterData);
+document.getElementById('statusFilter').addEventListener('change', filterData);
+
+// Stats
+const totalCompanies = new Set(data.map(r=>r[1])).size;
+const highestPkg = '27 LPA';
+let totalPlaced = 0;
+data.forEach(r => { const n = parseInt(String(r[6]).replace(/[^\d]/g,'')); if(!isNaN(n)) totalPlaced += n; });
+document.getElementById('stats-row').innerHTML = `
+    <div class="scard reveal"><div class="scard-num" style="color:var(--orange)">${totalCompanies}+</div><div class="scard-label">Companies Visited</div></div>
+    <div class="scard reveal reveal-delay-1"><div class="scard-num" style="color:var(--green)">${highestPkg}</div><div class="scard-label">Highest Package</div></div>
+    <div class="scard reveal reveal-delay-2"><div class="scard-num" style="color:var(--blue)">${totalPlaced}+</div><div class="scard-label">Students Placed</div></div>
+    <div class="scard reveal reveal-delay-3"><div class="scard-num" style="color:var(--purple)">${data.length}</div><div class="scard-label">Total Roles Offered</div></div>`;
+
+// Initial render
+renderTable(data);
+
+// Scroll reveal
+const revObs = new IntersectionObserver(entries => {
+    entries.forEach(x => { if(x.isIntersecting){x.target.classList.add('visible');revObs.unobserve(x.target)} });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => revObs.observe(el));
+
+window.addEventListener('scroll', () => {
+    const nb = document.getElementById('navbar');
+    if(nb) nb.style.borderBottomColor = window.scrollY > 60 ? 'rgba(30,45,64,0.9)' : 'var(--border)';
+});
+</script>
+</body>
+</html>

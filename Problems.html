@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIETCode | Problems</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Firebase BEFORE Monaco -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
+    <style>
+:root{--orange:#ffa116;--orange-glow:rgba(255,161,22,0.25);--bg:#080b10;--bg2:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;--border2:#1e2d40;--text:#e6edf3;--text-muted:#8b949e;--text-soft:#9ab0cc;--blue:#58a6ff;--green:#3fb950;--red:#f85149;--purple:#d2a8ff;--yellow:#ffa657;--cyan:#79c0ff;--easy:#3fb950;--medium:#ffa657;--hard:#f85149}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── NAVBAR ── */
+.navbar{position:sticky;top:0;z-index:100;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;background:rgba(8,11,16,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+.nav-brand{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--orange);text-decoration:none}.nav-brand span{color:var(--text)}
+.nav-links{display:flex;gap:30px;align-items:center}
+.nav-link{text-decoration:none;color:var(--text-muted);font-size:14px;font-weight:500;transition:color .2s;background:none;border:none;cursor:pointer;font-family:inherit;padding:0}.nav-link:hover,.nav-link.active{color:var(--text)}
+.nav-right{display:flex;gap:12px;align-items:center;min-width:180px;justify-content:flex-end}
+.btn-ghost{padding:8px 18px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--text-soft);font-size:13px;font-weight:500;cursor:pointer;text-decoration:none;transition:.2s;font-family:inherit}.btn-ghost:hover{border-color:var(--orange);color:var(--orange)}
+.btn-cta{padding:8px 20px;border-radius:8px;border:none;background:var(--orange);color:#000;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:.2s;font-family:inherit}.btn-cta:hover{filter:brightness(1.1)}
+.profile-wrap{position:relative}.user-pill{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:5px 14px 5px 6px;cursor:pointer;transition:.2s;user-select:none}.user-pill:hover{border-color:var(--orange)}
+.user-avatar{width:32px;height:32px;border-radius:8px;background:var(--orange);color:#000;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;font-family:'Syne';flex-shrink:0}
+.user-name{font-size:13px;font-weight:600;color:var(--text);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill-chevron{color:var(--text-muted);font-size:10px;transition:transform .2s}.profile-wrap.open .pill-chevron{transform:rotate(180deg)}
+.profile-dropdown{position:absolute;top:calc(100% + 8px);right:0;width:280px;background:var(--surface);border:1px solid var(--border2);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5);opacity:0;visibility:hidden;transform:translateY(-8px);transition:.2s;z-index:200;overflow:hidden}.profile-wrap.open .profile-dropdown{opacity:1;visibility:visible;transform:translateY(0)}
+.dd-header{padding:18px 18px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.dd-avatar{width:44px;height:44px;border-radius:12px;background:var(--orange);color:#000;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;font-family:'Syne';flex-shrink:0}
+.dd-info{flex:1;min-width:0}.dd-name{font-size:15px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dd-email{font-size:12px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dd-menu{padding:6px 0}.dd-item{display:flex;align-items:center;gap:12px;padding:11px 18px;font-size:14px;font-weight:500;color:var(--text-soft);cursor:pointer;transition:.15s;border:none;background:none;width:100%;text-align:left;font-family:inherit;text-decoration:none}.dd-item:hover{background:var(--surface2);color:var(--text)}.dd-item i{width:18px;text-align:center;font-size:14px;color:var(--text-muted)}.dd-item:hover i{color:var(--orange)}
+.dd-divider{height:1px;background:var(--border);margin:4px 0}.dd-item.dd-danger{color:var(--red)}.dd-item.dd-danger i{color:var(--red)}.dd-item.dd-danger:hover{background:rgba(248,81,73,.08)}
+
+/* ── PROBLEM LIST VIEW ── */
+.list-view{max-width:1100px;margin:0 auto;padding:28px 32px}
+.list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.list-header h1{font-family:'Syne';font-size:26px;font-weight:800}
+.topic-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+.topic-chip{padding:7px 16px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;font-family:inherit}.topic-chip:hover{border-color:var(--text-soft);color:var(--text)}.topic-chip.active{background:var(--orange);color:#000;border-color:var(--orange)}
+.prob-table{width:100%;border-collapse:collapse}
+.prob-table thead th{text-align:left;padding:10px 14px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);border-bottom:1px solid var(--border)}
+.prob-table tbody tr{border-bottom:1px solid rgba(48,54,61,.4);transition:background .1s}.prob-table tbody tr:hover{background:var(--surface)}
+.prob-table td{padding:14px;font-size:14px}
+.td-status{width:40px;text-align:center}
+.td-title{font-weight:600;cursor:pointer;transition:color .15s}.td-title:hover{color:var(--orange)}
+.diff-tag{font-size:12px;font-weight:700;padding:3px 10px;border-radius:12px}
+.diff-easy{color:var(--easy);background:rgba(63,185,80,.1)}.diff-medium{color:var(--medium);background:rgba(255,166,87,.1)}.diff-hard{color:var(--hard);background:rgba(248,81,73,.1)}
+.solve-btn{padding:6px 16px;border-radius:8px;border:1px solid var(--blue);background:transparent;color:var(--blue);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;font-family:inherit}.solve-btn:hover{background:var(--blue);color:#000}
+
+/* ── EDITOR VIEW ── */
+.editor-view{display:none;height:calc(100vh - 64px)}
+.ev-split{display:flex;height:100%}
+.ev-left{width:45%;min-width:340px;border-right:1px solid var(--border);overflow-y:auto;background:var(--bg)}
+.ev-right{flex:1;display:flex;flex-direction:column;background:var(--bg2)}
+.ev-back{display:flex;align-items:center;gap:8px;padding:12px 20px;font-size:13px;font-weight:600;color:var(--text-muted);cursor:pointer;border-bottom:1px solid var(--border);transition:.15s;background:none;border-left:none;border-right:none;border-top:none;width:100%;text-align:left;font-family:inherit}.ev-back:hover{color:var(--text);background:var(--surface)}
+.ev-desc{padding:24px 24px 16px}
+.ev-title{font-family:'Syne';font-size:22px;font-weight:800;margin-bottom:6px}
+.ev-diff{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;margin-bottom:16px}
+.ev-section{margin-bottom:18px}.ev-section h4{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:8px}
+.ev-section p{font-size:14px;line-height:1.8;color:var(--text-soft)}
+.ev-example{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:10px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7}
+.ev-example .ex-label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.ev-example .ex-val{color:var(--cyan)}
+
+/* Editor top bar */
+.ed-topbar{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--border);background:var(--surface)}
+.ed-lang select{background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:13px;font-family:'DM Sans';cursor:pointer}
+.ed-actions{display:flex;gap:8px}
+.btn-run{padding:7px 18px;border-radius:8px;border:1px solid var(--green);background:transparent;color:var(--green);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;display:flex;align-items:center;gap:6px}.btn-run:hover{background:var(--green);color:#000}
+.btn-submit{padding:7px 18px;border-radius:8px;border:none;background:var(--orange);color:#000;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;display:flex;align-items:center;gap:6px}.btn-submit:hover{filter:brightness(1.1)}
+.btn-run:disabled,.btn-submit:disabled{opacity:.5;cursor:not-allowed}
+
+/* Monaco container */
+.ed-monaco{flex:1;min-height:0}
+
+/* Results panel */
+.ed-results{border-top:1px solid var(--border);background:var(--surface);max-height:240px;overflow-y:auto;padding:14px 18px}
+.res-title{font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.tc-row{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:8px;margin-bottom:6px;font-size:13px;font-family:'JetBrains Mono',monospace}
+.tc-pass{background:rgba(63,185,80,.08);border:1px solid rgba(63,185,80,.2)}.tc-pass .tc-icon{color:var(--green)}
+.tc-fail{background:rgba(248,81,73,.08);border:1px solid rgba(248,81,73,.2)}.tc-fail .tc-icon{color:var(--red)}
+.tc-pending{background:var(--bg);border:1px solid var(--border)}.tc-pending .tc-icon{color:var(--text-muted)}
+.tc-info{flex:1;min-width:0}.tc-info span{display:block;font-size:11px;color:var(--text-muted)}
+.res-verdict{text-align:center;padding:16px;font-family:'Syne';font-size:20px;font-weight:800}
+.verdict-ac{color:var(--green)}.verdict-wa{color:var(--red)}
+.res-idle{color:var(--text-muted);font-size:14px;text-align:center;padding:20px}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--text-muted);border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Responsive */
+@media(max-width:768px){.navbar{padding:0 16px}.list-view{padding:20px 16px}.ev-split{flex-direction:column}.ev-left{width:100%;max-height:40vh;border-right:none;border-bottom:1px solid var(--border)}.ev-right{flex:1}}
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <a href="Explore.html" class="nav-brand">NIET<span>Code</span></a>
+    <div class="nav-links">
+        <a href="Explore.html" class="nav-link">Explore</a>
+        <a href="Problems.html" class="nav-link active">Problems</a>
+        <a href="Blueprint.html" class="nav-link">Blueprint</a>
+        <a href="Placements.html" class="nav-link">Placements</a>
+        <a href="Profile.html" class="nav-link">Profile</a>
+    </div>
+    <div class="nav-right" id="nav-right">
+        <a href="Login.html" class="btn-ghost">Log in</a>
+        <a href="Login.html" class="btn-cta">Get Started</a>
+    </div>
+</nav>
+
+<!-- ══ PROBLEM LIST VIEW ══ -->
+<div class="list-view" id="list-view">
+    <div class="list-header">
+        <h1 id="list-title">All Problems</h1>
+    </div>
+    <div class="topic-bar" id="topic-bar"></div>
+    <table class="prob-table">
+        <thead><tr><th class="td-status">Status</th><th>Title</th><th>Difficulty</th><th>Action</th></tr></thead>
+        <tbody id="prob-tbody"></tbody>
+    </table>
+</div>
+
+<!-- ══ EDITOR VIEW ══ -->
+<div class="editor-view" id="editor-view">
+    <div class="ev-split">
+        <div class="ev-left">
+            <button class="ev-back" onclick="closeEditor()"><i class="fa-solid fa-arrow-left"></i> Back to Problems</button>
+            <div class="ev-desc" id="ev-desc"></div>
+        </div>
+        <div class="ev-right">
+            <div class="ed-topbar">
+                <div class="ed-lang"><select id="lang-select" onchange="onLangChange()">
+                    <option value="javascript">JavaScript</option>
+                    <option value="python">Python 3</option>
+                    <option value="java">Java</option>
+                    <option value="cpp">C++ 17</option>
+                </select></div>
+                <div class="ed-actions">
+                    <button class="btn-run" id="btn-run" onclick="runCode()"><i class="fa-solid fa-play"></i> Run</button>
+                    <button class="btn-submit" id="btn-submit" onclick="submitCode()"><i class="fa-solid fa-paper-plane"></i> Submit</button>
+                </div>
+            </div>
+            <div class="ed-monaco" id="ed-monaco"></div>
+            <div class="ed-results" id="ed-results">
+                <div class="res-idle">Select a problem and write your solution. Click <strong>Run</strong> to test against sample cases or <strong>Submit</strong> to check all cases.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// GLOBAL STATE
+// ═══════════════════════════════════════════════════
+let currentUser = null;
+let monacoEditor = null;
+let activeProblem = null;
+let activeTopic = 'All';
+let savedCodes = {};
+let db = null; // Firestore instance
+let saveCodeTimer = null;
+
+// ═══════════════════════════════════════════════════
+// PROBLEM DATABASE (with test cases)
+// ═══════════════════════════════════════════════════
+const PROBLEMS = [
+  // ── ARRAYS ──
+  { id:'two-sum', topic:'Array', title:'Two Sum', diff:'Easy', solved:false,
+    desc:'Given an array of integers <code>nums</code> and an integer <code>target</code>, return indices of the two numbers such that they add up to <code>target</code>. You may assume that each input would have exactly one solution.',
+    constraints:'2 ≤ nums.length ≤ 10⁴ · -10⁹ ≤ nums[i] ≤ 10⁹',
+    examples:[
+      {input:'nums = [2,7,11,15], target = 9', output:'[0,1]'},
+      {input:'nums = [3,2,4], target = 6', output:'[1,2]'},
+      {input:'nums = [3,3], target = 6', output:'[0,1]'}
+    ],
+    allTests:[
+      {input:'2 7 11 15\n9', output:'0 1'},{input:'3 2 4\n6', output:'1 2'},{input:'3 3\n6', output:'0 1'},
+      {input:'1 5 3 7\n8', output:'1 2'},{input:'-1 -2 -3 -4 -5\n-8', output:'2 4'}
+    ],
+    starters:{
+      javascript:'function twoSum(nums, target) {\n  // Your code here\n}\n\n// Read input\nconst lines = require("fs").readFileSync("/dev/stdin","utf8").trim().split("\\n");\nconst nums = lines[0].split(" ").map(Number);\nconst target = parseInt(lines[1]);\nconst result = twoSum(nums, target);\nconsole.log(result.join(" "));',
+      python:'def two_sum(nums, target):\n    # Your code here\n    pass\n\nnums = list(map(int, input().split()))\ntarget = int(input())\nresult = two_sum(nums, target)\nprint(*result)',
+      java:'import java.util.*;\npublic class Main {\n    public static int[] twoSum(int[] nums, int target) {\n        // Your code here\n        return new int[]{};\n    }\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        String[] parts = sc.nextLine().split(" ");\n        int[] nums = new int[parts.length];\n        for(int i=0;i<parts.length;i++) nums[i]=Integer.parseInt(parts[i]);\n        int target = sc.nextInt();\n        int[] res = twoSum(nums, target);\n        System.out.println(res[0]+" "+res[1]);\n    }\n}',
+      cpp:'#include<bits/stdc++.h>\nusing namespace std;\nint main(){\n    string line; getline(cin,line);\n    istringstream iss(line);\n    vector<int> nums; int x;\n    while(iss>>x) nums.push_back(x);\n    int target; cin>>target;\n    // Your solution here\n    // Print two indices separated by space\n    return 0;\n}'
+    }
+  },
+  { id:'max-subarray', topic:'Array', title:'Maximum Subarray', diff:'Medium', solved:false,
+    desc:'Given an integer array <code>nums</code>, find the subarray with the largest sum, and return its sum.',
+    constraints:'-10⁴ ≤ nums[i] ≤ 10⁴ · 1 ≤ nums.length ≤ 10⁵',
+    examples:[
+      {input:'nums = [-2,1,-3,4,-1,2,1,-5,4]', output:'6'},
+      {input:'nums = [1]', output:'1'},
+      {input:'nums = [5,4,-1,7,8]', output:'23'}
+    ],
+    allTests:[
+      {input:'-2 1 -3 4 -1 2 1 -5 4', output:'6'},{input:'1', output:'1'},{input:'5 4 -1 7 8', output:'23'},
+      {input:'-1', output:'-1'},{input:'-2 -1', output:'-1'}
+    ],
+    starters:{
+      javascript:'const nums = require("fs").readFileSync("/dev/stdin","utf8").trim().split(" ").map(Number);\nlet maxSum = nums[0], cur = nums[0];\nfor(let i=1;i<nums.length;i++){cur=Math.max(nums[i],cur+nums[i]);maxSum=Math.max(maxSum,cur);}\n// Replace above with your solution\nconsole.log(maxSum);',
+      python:'nums = list(map(int, input().split()))\n# Your solution here\nprint()',
+      java:'import java.util.*;\npublic class Main {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        String[] p = sc.nextLine().split(" ");\n        int[] nums = new int[p.length];\n        for(int i=0;i<p.length;i++) nums[i]=Integer.parseInt(p[i]);\n        // Your solution here\n        System.out.println();\n    }\n}',
+      cpp:'#include<bits/stdc++.h>\nusing namespace std;\nint main(){\n    int x; vector<int> v;\n    while(cin>>x) v.push_back(x);\n    // Your solution here\n    return 0;\n}'
+    }
+  },
+  { id:'trapping-rain', topic:'Array', title:'Trapping Rain Water', diff:'Hard', solved:false,
+    desc:'Given <code>n</code> non-negative integers representing an elevation map where the width of each bar is 1, compute how much water it can trap after raining.',
+    constraints:'n == height.length · 1 ≤ n ≤ 2 × 10⁴ · 0 ≤ height[i] ≤ 10⁵',
+    examples:[
+      {input:'height = [0,1,0,2,1,0,1,3,2,1,2,1]', output:'6'},
+      {input:'height = [4,2,0,3,2,5]', output:'9'},
+      {input:'height = [1,0,1]', output:'1'}
+    ],
+    allTests:[
+      {input:'0 1 0 2 1 0 1 3 2 1 2 1', output:'6'},{input:'4 2 0 3 2 5', output:'9'},{input:'1 0 1', output:'1'},
+      {input:'0 0 0', output:'0'},{input:'3 0 0 2 0 4', output:'10'}
+    ],
+    starters:{
+      javascript:'const h = require("fs").readFileSync("/dev/stdin","utf8").trim().split(" ").map(Number);\n// Your solution here\nconsole.log();',
+      python:'h = list(map(int, input().split()))\n# Your solution here\nprint()',
+      java:'import java.util.*;\npublic class Main {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        String[] p = sc.nextLine().split(" ");\n        int[] h = new int[p.length];\n        for(int i=0;i<p.length;i++) h[i]=Integer.parseInt(p[i]);\n        // Your solution here\n        System.out.println();\n    }\n}',
+      cpp:'#include<bits/stdc++.h>\nusing namespace std;\nint main(){\n    int x; vector<int> v;\n    while(cin>>x) v.push_back(x);\n    // Your solution here\n    return 0;\n}'
+    }
+  },
+  // ── LINKED LIST ──
+  { id:'reverse-ll', topic:'Linked List', title:'Reverse Linked List', diff:'Easy', solved:false,
+    desc:'Given the head of a singly linked list, reverse the list, and return the reversed list. (For this sandbox, input is a space-separated list of values.)',
+    constraints:'0 ≤ Number of nodes ≤ 5000 · -5000 ≤ Node.val ≤ 5000',
+    examples:[
+      {input:'list = [1,2,3,4,5]', output:'5 4 3 2 1'},
+      {input:'list = [1,2]', output:'2 1'},
+      {input:'list = [1]', output:'1'}
+    ],
+    allTests:[
+      {input:'1 2 3 4 5', output:'5 4 3 2 1'},{input:'1 2', output:'2 1'},{input:'1', output:'1'},
+      {input:'10 20 30', output:'30 20 10'},{input:'5 4 3 2 1', output:'1 2 3 4 5'}
+    ],
+    starters:{
+      javascript:'const nums = require("fs").readFileSync("/dev/stdin","utf8").trim().split(" ").map(Number);\n// Reverse the array (simulating linked list reversal)\nconsole.log(nums.reverse().join(" "));',
+      python:'nums = list(map(int, input().split()))\n# Your solution here\nprint()',
+      java:'import java.util.*;\npublic class Main {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        String[] p = sc.nextLine().split(" ");\n        // Your solution here\n    }\n}',
+      cpp:'#include<bits/stdc++.h>\nusing namespace std;\nint main(){\n    int x; vector<int> v;\n    while(cin>>x) v.push_back(x);\n    // Your solution here\n    return 0;\n}'
+    }
+  },
+  { id:'merge-sorted', topic:'Linked List', title:'Merge Two Sorted Lists', diff:'Easy', solved:false,
+    desc:'Merge two sorted arrays into one sorted array. (Simplified from linked list version for sandbox execution.)',
+    constraints:'0 ≤ list length ≤ 50 · -100 ≤ values ≤ 100',
+    examples:[
+      {input:'1 2 4\\n1 3 4', output:'1 1 2 3 4 4'},
+      {input:'\\n', output:''},
+      {input:'\\n0', output:'0'}
+    ],
+    allTests:[
+      {input:'1 2 4\n1 3 4', output:'1 1 2 3 4 4'},{input:'\n', output:''},{input:'\n0', output:'0'},
+      {input:'1 3 5\n2 4 6', output:'1 2 3 4 5 6'},{input:'1\n2', output:'1 2'}
+    ],
+    starters:{
+      javascript:'const lines = require("fs").readFileSync("/dev/stdin","utf8").trim().split("\\n");\nconst a = lines[0]?lines[0].split(" ").map(Number):[];\nconst b = lines[1]?lines[1].split(" ").map(Number):[];\n// Merge sorted arrays a and b\nconsole.log();',
+      python:'a = list(map(int, input().split())) if True else []\nb = list(map(int, input().split())) if True else []\n# Merge sorted\nprint()',
+      java:'import java.util.*;\npublic class Main {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        // Your solution\n    }\n}',
+      cpp:'#include<bits/stdc++.h>\nusing namespace std;\nint main(){\n    // Your solution\n    return 0;\n}'
+    }
+  },
+  // ── STACK ──
+  { id:'valid-parens', topic:'Stack', title:'Valid Parentheses', diff:'Easy', solved:false,
+    desc:'Given a string <code>s</code> containing just the characters <code>(</code>, <code>)</code>, <code>{</code>, <code>}</code>, <code>[</code> and <code>]</code>, determine if the input string is valid.',
+    constraints:'1 ≤ s.length ≤ 10⁴ · s consists of parentheses only',
+    examples:[
+      {input:'()', output:'true'},
+      {input:'()[]{}', output:'true'},
+      {input:'(]', output:'false'}
+    ],
+    allTests:[
+      {input:'()', output:'true'},{input:'()[]{}', output:'true'},{input:'(]', output:'false'},
+      {input:'([)]', output:'false'},{input:'{[]}', output:'true'}
+    ],
+    starters:{
+      javascript:'const s = require("fs").readFileSync("/dev/stdin","utf8").trim();\n// Your solution here\nconsole.log();',
+      python:'s = input().strip()\n# Your solution here\nprint()',
+      java:'import java.util.*;\npublic class Main {\n    public static void main(String[] args) {\n        String s = new Scanner(System.in).nextLine().trim();\n        // Your solution here\n        System.out.println();\n    }\n}',
+      cpp:'#include<bits/stdc++.h>\nusing namespace std;\nint main(){\n    string s; cin>>s;\n    // Your solution here\n    return 0;\n}'
+    }
+  },
+  { id:'min-stack', topic:'Stack', title:'Min Stack', diff:'Medium', solved:false,
+    desc:'Design a stack that supports push, pop, top, and retrieving the minimum element in constant time. Input: operations and values, output: results of getMin and top operations.',
+    constraints:'Methods pop, top and getMin will always be called on non-empty stacks',
+    examples:[
+      {input:'push -2\\npush 0\\npush -3\\ngetMin\\npop\\ntop\\ngetMin', output:'-3\\n0\\n-2'},
+      {input:'push 1\\npush 2\\ngetMin\\npop\\ngetMin', output:'1\\n1'},
+      {input:'push 5\\npush 3\\npush 7\\ngetMin\\npop\\ngetMin', output:'3\\n3'}
+    ],
+    allTests:[
+      {input:'push -2\npush 0\npush -3\ngetMin\npop\ntop\ngetMin', output:'-3\n0\n-2'},
+      {input:'push 1\npush 2\ngetMin\npop\ngetMin', output:'1\n1'},
+      {input:'push 5\npush 3\npush 7\ngetMin\npop\ngetMin', output:'3\n3'}
+    ],
+    starters:{
+      javascript:'const lines = require("fs").readFileSync("/dev/stdin","utf8").trim().split("\\n");\n// Implement MinStack\nconsole.log();',
+      python:'import sys\nlines = sys.stdin.read().strip().split("\\n")\n# Implement MinStack\nprint()',
+      java:'import java.util.*;\npublic class Main {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        // Implement MinStack\n    }\n}',
+      cpp:'#include<bits/stdc++.h>\nusing namespace std;\nint main(){\n    // Implement MinStack\n    return 0;\n}'
+    }
+  },
+  // ── QUEUE ──
+  { id:'queue-stack', topic:'Queue', title:'Implement Stack using Queues', diff:'Easy', solved:false,
+    desc:'Implement a last-in-first-out (LIFO) stack using only two queues. Input: series of push/pop/top operations.',
+    constraints:'1 ≤ x ≤ 9 · At most 100 calls',
+    examples:[
+      {input:'push 1\\npush 2\\ntop\\npop\\ntop', output:'2\\n2\\n1'},
+      {input:'push 5\\npush 3\\npop\\ntop', output:'3\\n5'},
+      {input:'push 1\\ntop', output:'1'}
+    ],
+    allTests:[
+      {input:'push 1\npush 2\ntop\npop\ntop', output:'2\n2\n1'},
+      {input:'push 5\npush 3\npop\ntop', output:'3\n5'},
+      {input:'push 1\ntop', output:'1'}
+    ],
+    starters:{
+      javascript:'const lines = require("fs").readFileSync("/dev/stdin","utf8").trim().split("\\n");\n// Implement Stack using Queues\nconsole.log();',
+      python:'import sys\nlines = sys.stdin.read().strip().split("\\n")\n# Implement Stack using Queues\nprint()',
+      java:'import java.util.*;\npublic class Main {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        // Implement\n    }\n}',
+      cpp:'#include<bits/stdc++.h>\nusing namespace std;\nint main(){\n    // Implement\n    return 0;\n}'
+    }
+  },
+  { id:'sliding-window', topic:'Queue', title:'Sliding Window Maximum', diff:'Hard', solved:false,
+    desc:'Given an array <code>nums</code> and a sliding window of size <code>k</code>, return the maximum value in each window as the window slides from left to right.',
+    constraints:'1 ≤ nums.length ≤ 10⁵ · 1 ≤ k ≤ nums.length',
+    examples:[
+      {input:'1 3 -1 -3 5 3 6 7\\n3', output:'3 3 5 5 6 7'},
+      {input:'1\\n1', output:'1'},
+      {input:'1 -1\\n1', output:'1 -1'}
+    ],
+    allTests:[
+      {input:'1 3 -1 -3 5 3 6 7\n3', output:'3 3 5 5 6 7'},{input:'1\n1', output:'1'},{input:'1 -1\n1', output:'1 -1'},
+      {input:'7 2 4\n2', output:'7 4'},{input:'1 3 1 2 0 5\n3', output:'3 3 2 5'}
+    ],
+    starters:{
+      javascript:'const lines = require("fs").readFileSync("/dev/stdin","utf8").trim().split("\\n");\nconst nums = lines[0].split(" ").map(Number);\nconst k = parseInt(lines[1]);\n// Your solution\nconsole.log();',
+      python:'nums = list(map(int, input().split()))\nk = int(input())\n# Your solution\nprint()',
+      java:'import java.util.*;\npublic class Main {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        String[] p = sc.nextLine().split(" ");\n        int[] nums = new int[p.length];\n        for(int i=0;i<p.length;i++) nums[i]=Integer.parseInt(p[i]);\n        int k = sc.nextInt();\n        // Your solution\n    }\n}',
+      cpp:'#include<bits/stdc++.h>\nusing namespace std;\nint main(){\n    string line; getline(cin,line);\n    istringstream iss(line);\n    vector<int> v; int x;\n    while(iss>>x) v.push_back(x);\n    int k; cin>>k;\n    // Your solution\n    return 0;\n}'
+    }
+  }
+];
+
+const TOPICS = ['All','Array','Linked List','Stack','Queue'];
+
+// Language maps now in execution engine below
+
+// ═══════════════════════════════════════════════════
+// FIREBASE AUTH
+// ═══════════════════════════════════════════════════
+function initFirebase(){
+    if(typeof firebase==='undefined')return false;
+    try{
+        if(!firebase.apps.length){
+            firebase.initializeApp({
+                apiKey:"AIzaSyBvS473QS25-jvd_zm4VmOA5UX4yIbvytU",
+                authDomain:"niet-code.firebaseapp.com",
+                projectId:"niet-code",
+                storageBucket:"niet-code.firebasestorage.app",
+                messagingSenderId:"331564337114",
+                appId:"1:331564337114:web:56c072292a02d8fc4422e3"
+            });
+        }
+        db = firebase.firestore();
+        firebase.auth().onAuthStateChanged(async user=>{
+            currentUser=user;
+            updateNavbar(user);
+            if(!user) window.location.href='Login.html';
+            else await loadUserData(user.uid);
+        });
+        window.doSignOut=function(){firebase.auth().signOut()};
+        return true;
+    }catch(e){console.warn('Firebase:',e.message);return false}
+}
+if(!initFirebase()){
+    let a=0;const iv=setInterval(()=>{a++;if(initFirebase()||a>=6){clearInterval(iv);if(a>=6){updateNavbar(null);window.location.href='Login.html';}}},500);
+}
+
+function updateNavbar(user){
+    const nr=document.getElementById('nav-right');
+    if(!user){nr.innerHTML='<a href="Login.html" class="btn-ghost">Log in</a><a href="Login.html" class="btn-cta">Get Started</a>';return;}
+    const i=(user.displayName||user.email).charAt(0).toUpperCase();
+    const n=user.displayName||user.email.split('@')[0];
+    const e=user.email||'';
+    nr.innerHTML=`<div class="profile-wrap" id="profile-wrap"><div class="user-pill" onclick="document.getElementById('profile-wrap').classList.toggle('open')"><div class="user-avatar">${i}</div><span class="user-name">${n}</span><i class="fa-solid fa-chevron-down pill-chevron"></i></div><div class="profile-dropdown"><div class="dd-header"><div class="dd-avatar">${i}</div><div class="dd-info"><div class="dd-name">${n}</div><div class="dd-email">${e}</div></div></div><div class="dd-menu"><a href="Profile.html" class="dd-item"><i class="fa-regular fa-user"></i> My Profile</a><a href="Problems.html" class="dd-item"><i class="fa-solid fa-code"></i> My Submissions</a><div class="dd-divider"></div><a href="Profile.html" class="dd-item"><i class="fa-solid fa-gear"></i> Settings</a><div class="dd-divider"></div><button class="dd-item dd-danger" onclick="window.doSignOut()"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button></div></div></div>`;
+}
+document.addEventListener('click',e=>{const w=document.getElementById('profile-wrap');if(w&&!w.contains(e.target))w.classList.remove('open')});
+
+// ═══════════════════════════════════════════════════
+// PROBLEM LIST
+// ═══════════════════════════════════════════════════
+function renderTopicBar(){
+    const bar=document.getElementById('topic-bar');
+    bar.innerHTML=TOPICS.map(t=>`<button class="topic-chip${t===activeTopic?' active':''}" onclick="filterTopic('${t}')">${t}</button>`).join('');
+}
+function filterTopic(t){
+    activeTopic=t;
+    renderTopicBar();
+    renderProblemList();
+}
+function renderProblemList(){
+    const tbody=document.getElementById('prob-tbody');
+    const title=document.getElementById('list-title');
+    const filtered=activeTopic==='All'?PROBLEMS:PROBLEMS.filter(p=>p.topic===activeTopic);
+    title.textContent=activeTopic==='All'?'All Problems':activeTopic+' Problems';
+    tbody.innerHTML=filtered.map(p=>`<tr>
+        <td class="td-status">${p.solved?'<i class="fa-solid fa-circle-check" style="color:var(--green)"></i>':'<i class="fa-regular fa-circle" style="color:var(--border)"></i>'}</td>
+        <td class="td-title" onclick="openEditor('${p.id}')">${p.title}</td>
+        <td><span class="diff-tag diff-${p.diff.toLowerCase()}">${p.diff}</span></td>
+        <td><button class="solve-btn" onclick="openEditor('${p.id}')"><i class="fa-solid fa-code"></i> Solve</button></td>
+    </tr>`).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// EDITOR
+// ═══════════════════════════════════════════════════
+function openEditor(pid){
+    const p=PROBLEMS.find(x=>x.id===pid);if(!p)return;
+    activeProblem=p;
+    document.getElementById('list-view').style.display='none';
+    document.getElementById('editor-view').style.display='block';
+    // Render description
+    const diffClass='diff-'+p.diff.toLowerCase();
+    let html=`<div class="ev-title">${p.title}</div><div class="ev-diff ${diffClass}">${p.diff}</div>`;
+    html+=`<div class="ev-section"><h4>Description</h4><p>${p.desc}</p></div>`;
+    html+=`<div class="ev-section"><h4>Constraints</h4><p>${p.constraints}</p></div>`;
+    html+=`<div class="ev-section"><h4>Examples</h4>`;
+    p.examples.forEach((ex,i)=>{
+        html+=`<div class="ev-example"><div class="ex-label">Example ${i+1}</div><div><strong>Input:</strong> <span class="ex-val">${ex.input}</span></div><div><strong>Output:</strong> <span class="ex-val">${ex.output}</span></div></div>`;
+    });
+    html+=`</div>`;
+    document.getElementById('ev-desc').innerHTML=html;
+    // Reset results
+    document.getElementById('ed-results').innerHTML='<div class="res-idle">Write your solution and click <strong>Run</strong> to test.</div>';
+    // Init Monaco
+    const lang=document.getElementById('lang-select').value;
+    initMonaco(p.starters[lang]||'',lang);
+}
+function closeEditor(){
+    document.getElementById('editor-view').style.display='none';
+    document.getElementById('list-view').style.display='';
+    activeProblem=null;
+}
+function onLangChange(){
+    if(!activeProblem)return;
+    const lang=document.getElementById('lang-select').value;
+    const key=activeProblem.id+'-'+lang;
+    const code=savedCodes[key]||activeProblem.starters[lang]||'';
+    if(monacoEditor) monacoEditor.setValue(code);
+    monaco.editor.setModelLanguage(monacoEditor.getModel(), lang==='cpp'?'cpp':lang);
+}
+function initMonaco(code,lang){
+    const container=document.getElementById('ed-monaco');
+    if(monacoEditor){
+        monacoEditor.setValue(code);
+        monaco.editor.setModelLanguage(monacoEditor.getModel(), lang==='cpp'?'cpp':lang);
+        return;
+    }
+    require.config({paths:{vs:'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs'}});
+    require(['vs/editor/editor.main'],function(){
+        monacoEditor=monaco.editor.create(container,{
+            value:code,language:lang==='cpp'?'cpp':lang,
+            theme:'vs-dark',fontSize:14,fontFamily:"'JetBrains Mono',monospace",
+            minimap:{enabled:false},scrollBeyondLastLine:false,padding:{top:12},
+            automaticLayout:true,tabSize:4
+        });
+        monacoEditor.onDidChangeModelContent(()=>{
+            if(activeProblem){
+                const l=document.getElementById('lang-select').value;
+                const key=activeProblem.id+'-'+l;
+                savedCodes[key]=monacoEditor.getValue();
+                // Debounced save to Firestore
+                clearTimeout(saveCodeTimer);
+                saveCodeTimer=setTimeout(()=>{
+                    if(currentUser&&db){
+                        db.collection('users').doc(currentUser.uid).set(
+                            {savedCodes:{[key]:monacoEditor.getValue()},lastActive:firebase.firestore.FieldValue.serverTimestamp()},
+                            {merge:true}
+                        ).catch(e=>console.warn('Code save:',e.message));
+                    }
+                },3000);
+            }
+        });
+    });
+}
+
+// ═══════════════════════════════════════════════════
+// CODE EXECUTION ENGINE
+// JavaScript → browser eval (instant)
+// Python    → Pyodide WebAssembly (runs in browser!)
+// Java/C++  → API fallback chain
+// ═══════════════════════════════════════════════════
+async function executeCode(code, lang, stdin){
+    if(lang==='javascript') return executeJS(code, stdin);
+    if(lang==='python') return executePython(code, stdin);
+    // Java / C++ → try APIs
+    const apis = [tryJudge0, tryWandbox];
+    for(const apiFn of apis){
+        try{
+            const r = await apiFn(code, lang, stdin);
+            if(r && !r._apiFail) return r;
+        }catch(e){console.log(apiFn.name+' error:',e.message)}
+    }
+    return {error:'All compiler APIs are currently unavailable. Please try again in a few minutes or use JavaScript/Python (both run in-browser, no API needed).', output:''};
+}
+
+// ── JavaScript: browser eval ──
+function executeJS(code, stdin){
+    return new Promise(resolve=>{
+        try{
+            let output=[];
+            const cons={log:(...a)=>output.push(a.map(String).join(' ')),
+                        error:(...a)=>output.push(a.map(String).join(' '))};
+            const fakeRequire=(m)=>{
+                if(m==='fs') return {readFileSync:()=>stdin||''};
+                return {};
+            };
+            const fn=new Function('console','require',code);
+            fn(cons, fakeRequire);
+            resolve({output:output.join('\n').trim(), error:''});
+        }catch(e){ resolve({output:'', error:e.toString()}); }
+    });
+}
+
+// ── Python: Pyodide (WebAssembly, runs in browser!) ──
+let pyodideInstance = null;
+let pyodideLoading = false;
+async function loadPyodide(){
+    if(pyodideInstance) return pyodideInstance;
+    if(pyodideLoading) {
+        while(pyodideLoading) await new Promise(r=>setTimeout(r,200));
+        return pyodideInstance;
+    }
+    pyodideLoading = true;
+    // Load Pyodide script
+    if(!window.loadPyodide){
+        await new Promise((resolve, reject)=>{
+            const s=document.createElement('script');
+            s.src='https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js';
+            s.onload=resolve; s.onerror=reject;
+            document.head.appendChild(s);
+        });
+    }
+    pyodideInstance = await window.loadPyodide();
+    pyodideLoading = false;
+    return pyodideInstance;
+}
+
+async function executePython(code, stdin){
+    try{
+        const py = await loadPyodide();
+        // Mock stdin with io.StringIO
+        const wrappedCode = `
+import sys, io
+sys.stdin = io.StringIO(${JSON.stringify(stdin||'')})
+_output = io.StringIO()
+_old_stdout = sys.stdout
+sys.stdout = _output
+try:
+${code.split('\n').map(l=>'    '+l).join('\n')}
+except SystemExit:
+    pass
+except Exception as e:
+    print(str(e), file=sys.stderr if hasattr(sys,'stderr') else _output)
+sys.stdout = _old_stdout
+_output.getvalue()
+`;
+        const result = await py.runPythonAsync(wrappedCode);
+        return {output:(result||'').trim(), error:''};
+    }catch(e){
+        return {output:'', error:e.message||e.toString()};
+    }
+}
+
+// ── PRIMARY API: Judge0 CE via RapidAPI (101 free requests/day) ──
+const JUDGE0_LANG_IDS = {java:62, cpp:54}; // Java (OpenJDK 13), C++ (GCC 9.2)
+const JUDGE0_HOST = 'judge029.p.rapidapi.com';
+const JUDGE0_KEY = '1efc9af920msh1d6d2d88685fe6ep1cab6cjsna38c888dfd4f';
+
+async function tryJudge0(code, lang, stdin){
+    const langId=JUDGE0_LANG_IDS[lang]; if(!langId) return {_apiFail:true};
+    try{
+        // Submit code
+        const res=await fetch('https://'+JUDGE0_HOST+'/submissions?base64_encoded=true&wait=true&fields=stdout,stderr,compile_output,status',{
+            method:'POST',
+            headers:{
+                'Content-Type':'application/json',
+                'X-RapidAPI-Key':JUDGE0_KEY,
+                'X-RapidAPI-Host':JUDGE0_HOST
+            },
+            body:JSON.stringify({
+                language_id:langId,
+                source_code:btoa(unescape(encodeURIComponent(code))),
+                stdin:btoa(unescape(encodeURIComponent(stdin||'')))
+            })
+        });
+        if(!res.ok) return {_apiFail:true};
+        const d=await res.json();
+        // Decode base64 outputs
+        const decode=s=>{try{return decodeURIComponent(escape(atob(s||'')));}catch(e){return s||'';}};
+        const stdout=decode(d.stdout).trim();
+        const stderr=decode(d.stderr).trim();
+        const compileErr=decode(d.compile_output).trim();
+        // Check status: 3 = Accepted
+        if(d.status&&d.status.id===6) return {error:compileErr||'Compilation Error', output:''};
+        if(d.status&&d.status.id>3) return {error:stderr||compileErr||'Runtime Error ('+d.status.description+')', output:stdout};
+        return {output:stdout, error:stderr};
+    }catch(e){console.warn('Judge0:',e.message); return {_apiFail:true};}
+}
+
+// ── FALLBACK API: Wandbox ──
+const WANDBOX_MAP = {java:'openjdk-jdk-17.0.0+35', cpp:'gcc-12.2.0'};
+async function tryWandbox(code, lang, stdin){
+    const compiler=WANDBOX_MAP[lang]; if(!compiler) return {_apiFail:true};
+    try{
+        const res=await fetch('https://wandbox.org/api/compile.json',{
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({code,compiler,stdin:stdin||'','compiler-option-raw':lang==='cpp'?'-std=c++17':''})
+        });
+        if(!res.ok) return {_apiFail:true};
+        const d=await res.json();
+        if(d.compiler_error) return {error:d.compiler_error, output:''};
+        const out=(d.program_output||'').trim(), err=(d.program_error||'').trim();
+        if(d.status&&d.status!=='0'&&!out) return {error:err||'Runtime error', output:''};
+        return {output:out, error:err};
+    }catch(e){return {_apiFail:true};}
+}
+
+// ═══════════════════════════════════════════════════
+// RUN & SUBMIT
+// ═══════════════════════════════════════════════════
+async function runCode(){
+    if(!activeProblem||!monacoEditor)return;
+    const code=monacoEditor.getValue();
+    const lang=document.getElementById('lang-select').value;
+    const tests=activeProblem.allTests.slice(0,3); // sample cases
+    setButtonsLoading(true);
+    const rDiv=document.getElementById('ed-results');
+    rDiv.innerHTML='<div class="res-title"><div class="spinner"></div> Running sample test cases...</div>';
+    // Run each test
+    let html='<div class="res-title"><i class="fa-solid fa-flask"></i> Sample Test Results</div>';
+    let allPass=true;
+    for(let i=0;i<tests.length;i++){
+        try{
+            const r=await executeCode(code,lang,tests[i].input);
+            const pass=r.output===tests[i].output;
+            if(!pass)allPass=false;
+            html+=`<div class="tc-row ${pass?'tc-pass':'tc-fail'}"><span class="tc-icon">${pass?'<i class="fa-solid fa-circle-check"></i>':'<i class="fa-solid fa-circle-xmark"></i>'}</span><div class="tc-info"><strong>Case ${i+1}</strong><span>Input: ${tests[i].input.replace(/\n/g,' | ')}</span><span>Expected: ${tests[i].output} ${pass?'':'| Got: '+(r.error||r.output||'(empty)')}</span></div></div>`;
+        }catch(e){
+            allPass=false;
+            html+=`<div class="tc-row tc-fail"><span class="tc-icon"><i class="fa-solid fa-circle-xmark"></i></span><div class="tc-info"><strong>Case ${i+1}</strong><span>Error: ${e.message}</span></div></div>`;
+        }
+    }
+    html+=`<div class="res-verdict ${allPass?'verdict-ac':'verdict-wa'}">${allPass?'✅ All Sample Cases Passed':'❌ Some Cases Failed'}</div>`;
+    rDiv.innerHTML=html;
+    setButtonsLoading(false);
+}
+
+async function submitCode(){
+    if(!activeProblem||!monacoEditor)return;
+    const code=monacoEditor.getValue();
+    const lang=document.getElementById('lang-select').value;
+    const tests=activeProblem.allTests;
+    setButtonsLoading(true);
+    const rDiv=document.getElementById('ed-results');
+    rDiv.innerHTML='<div class="res-title"><div class="spinner"></div> Submitting — running all test cases...</div>';
+    let html='<div class="res-title"><i class="fa-solid fa-paper-plane"></i> Submission Results</div>';
+    let passed=0;
+    for(let i=0;i<tests.length;i++){
+        try{
+            const r=await executeCode(code,lang,tests[i].input);
+            const pass=r.output===tests[i].output;
+            if(pass)passed++;
+            html+=`<div class="tc-row ${pass?'tc-pass':'tc-fail'}"><span class="tc-icon">${pass?'<i class="fa-solid fa-circle-check"></i>':'<i class="fa-solid fa-circle-xmark"></i>'}</span><div class="tc-info"><strong>Test ${i+1}${i<3?' (sample)':' (hidden)'}</strong><span>${pass?'Passed':('Expected: '+tests[i].output+' | Got: '+(r.error||r.output||'(empty)'))}</span></div></div>`;
+        }catch(e){
+            html+=`<div class="tc-row tc-fail"><span class="tc-icon"><i class="fa-solid fa-circle-xmark"></i></span><div class="tc-info"><strong>Test ${i+1}</strong><span>Error: ${e.message}</span></div></div>`;
+        }
+    }
+    const allPass=passed===tests.length;
+    html+=`<div class="res-verdict ${allPass?'verdict-ac':'verdict-wa'}">${allPass?'🎉 Accepted — '+passed+'/'+tests.length+' Passed':'❌ Wrong Answer — '+passed+'/'+tests.length+' Passed'}</div>`;
+    rDiv.innerHTML=html;
+    // Save solved status to Firestore
+    if(allPass&&currentUser&&db){
+        activeProblem.solved=true;
+        renderProblemList();
+        try{
+            await db.collection('users').doc(currentUser.uid).set({
+                solvedProblems:firebase.firestore.FieldValue.arrayUnion(activeProblem.id),
+                stats:recalcStats(),
+                lastActive:firebase.firestore.FieldValue.serverTimestamp()
+            },{merge:true});
+        }catch(e){console.warn('Save solved:',e.message)}
+    }
+    setButtonsLoading(false);
+}
+
+function setButtonsLoading(loading){
+    document.getElementById('btn-run').disabled=loading;
+    document.getElementById('btn-submit').disabled=loading;
+}
+
+// ═══════════════════════════════════════════════════
+// FIRESTORE: LOAD & SAVE USER DATA
+// ═══════════════════════════════════════════════════
+async function loadUserData(uid){
+    try{
+        const doc=await db.collection('users').doc(uid).get();
+        if(doc.exists){
+            const data=doc.data();
+            // Restore solved problems
+            (data.solvedProblems||[]).forEach(pid=>{
+                const p=PROBLEMS.find(x=>x.id===pid);
+                if(p) p.solved=true;
+            });
+            // Restore saved codes
+            if(data.savedCodes) savedCodes=data.savedCodes;
+        }
+        renderProblemList();
+    }catch(e){console.warn('Load user data:',e.message)}
+}
+
+function recalcStats(){
+    let total=0,easy=0,medium=0,hard=0;
+    PROBLEMS.forEach(p=>{
+        if(p.solved){
+            total++;
+            if(p.diff==='Easy') easy++;
+            else if(p.diff==='Medium') medium++;
+            else if(p.diff==='Hard') hard++;
+        }
+    });
+    return {total,easy,medium,hard};
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+renderTopicBar();
+renderProblemList();
+</script>
+</body>
+</html>

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIETCode | Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <style>
+:root{--orange:#ffa116;--orange-glow:rgba(255,161,22,0.25);--bg:#080b10;--bg2:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;--border2:#1e2d40;--text:#e6edf3;--text-muted:#8b949e;--text-soft:#9ab0cc;--blue:#58a6ff;--green:#3fb950;--red:#f85149;--purple:#d2a8ff;--yellow:#ffa657;--cyan:#79c0ff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── NAVBAR ── */
+.navbar{position:sticky;top:0;z-index:100;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;background:rgba(8,11,16,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+.nav-brand{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--orange);text-decoration:none}.nav-brand span{color:var(--text)}
+.nav-links{display:flex;gap:30px;align-items:center}
+.nav-link{text-decoration:none;color:var(--text-muted);font-size:14px;font-weight:500;transition:color .2s}.nav-link:hover,.nav-link.active{color:var(--text)}
+.nav-right{display:flex;gap:12px;align-items:center;min-width:180px;justify-content:flex-end}
+.btn-ghost{padding:8px 18px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--text-soft);font-size:13px;font-weight:500;cursor:pointer;text-decoration:none;transition:.2s;font-family:inherit}.btn-ghost:hover{border-color:var(--orange);color:var(--orange)}
+.btn-cta{padding:8px 20px;border-radius:8px;border:none;background:var(--orange);color:#000;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:.2s;font-family:inherit}.btn-cta:hover{filter:brightness(1.1)}
+.profile-wrap{position:relative}.user-pill{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:5px 14px 5px 6px;cursor:pointer;transition:.2s;user-select:none}.user-pill:hover{border-color:var(--orange)}
+.user-avatar{width:32px;height:32px;border-radius:8px;background:var(--orange);color:#000;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;font-family:'Syne';flex-shrink:0}
+.user-name{font-size:13px;font-weight:600;color:var(--text);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill-chevron{color:var(--text-muted);font-size:10px;transition:transform .2s}.profile-wrap.open .pill-chevron{transform:rotate(180deg)}
+.profile-dropdown{position:absolute;top:calc(100% + 8px);right:0;width:280px;background:var(--surface);border:1px solid var(--border2);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5);opacity:0;visibility:hidden;transform:translateY(-8px);transition:.2s;z-index:200;overflow:hidden}.profile-wrap.open .profile-dropdown{opacity:1;visibility:visible;transform:translateY(0)}
+.dd-header{padding:18px 18px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}.dd-avatar{width:44px;height:44px;border-radius:12px;background:var(--orange);color:#000;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;font-family:'Syne';flex-shrink:0}
+.dd-info{flex:1;min-width:0}.dd-name{font-size:15px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dd-email{font-size:12px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dd-menu{padding:6px 0}.dd-item{display:flex;align-items:center;gap:12px;padding:11px 18px;font-size:14px;font-weight:500;color:var(--text-soft);cursor:pointer;transition:.15s;border:none;background:none;width:100%;text-align:left;font-family:inherit;text-decoration:none}.dd-item:hover{background:var(--surface2);color:var(--text)}.dd-item i{width:18px;text-align:center;font-size:14px;color:var(--text-muted)}.dd-item:hover i{color:var(--orange)}
+.dd-divider{height:1px;background:var(--border);margin:4px 0}.dd-item.dd-danger{color:var(--red)}.dd-item.dd-danger i{color:var(--red)}.dd-item.dd-danger:hover{background:rgba(248,81,73,.08)}
+
+/* ── PROFILE LAYOUT ── */
+.profile-page{max-width:960px;margin:0 auto;padding:40px 32px}
+
+/* Header card */
+.p-header{position:relative;background:linear-gradient(135deg,#1a1e2e 0%,#2d1a1a 100%);border-radius:20px;padding:0;overflow:hidden;margin-bottom:28px;border:1px solid var(--border)}
+.p-banner{height:140px;background:linear-gradient(135deg,rgba(255,161,22,.15),rgba(88,166,255,.1));position:relative}
+.p-banner::after{content:'';position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(transparent,rgba(22,27,34,.9))}
+.p-info{display:flex;align-items:flex-end;gap:24px;padding:0 32px 28px;margin-top:-50px;position:relative;z-index:2}
+.p-big-avatar{width:100px;height:100px;border-radius:20px;background:var(--orange);color:#000;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:42px;font-family:'Syne';border:4px solid var(--surface);flex-shrink:0}
+.p-details{flex:1;min-width:0}
+.p-realname{font-family:'Syne';font-size:26px;font-weight:800;margin-bottom:2px}
+.p-email{font-size:14px;color:var(--text-muted);margin-bottom:8px}
+.p-meta{display:flex;gap:20px;flex-wrap:wrap}
+.p-meta-item{font-size:13px;color:var(--text-soft);display:flex;align-items:center;gap:6px}.p-meta-item i{color:var(--orange);font-size:12px}
+
+/* Stats grid */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 18px;text-align:center;transition:border-color .2s}.stat-card:hover{border-color:var(--orange)}
+.stat-num{font-family:'Syne';font-size:28px;font-weight:800;margin-bottom:4px}
+.stat-label{font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.stat-easy{color:var(--green)}.stat-medium{color:var(--yellow)}.stat-hard{color:var(--red)}.stat-total{color:var(--orange)}
+
+/* Tabs */
+.tab-bar{display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--border);padding-bottom:0}
+.tab-btn{padding:10px 20px;border:none;background:transparent;color:var(--text-muted);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s;border-bottom:2px solid transparent;margin-bottom:-1px}.tab-btn:hover{color:var(--text)}.tab-btn.active{color:var(--orange);border-bottom-color:var(--orange)}
+
+/* Section cards */
+.section-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:18px;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:0}}
+.sc-title{font-family:'Syne';font-size:18px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:10px}.sc-title i{color:var(--orange)}
+.info-row{display:flex;align-items:center;padding:14px 0;border-bottom:1px solid rgba(48,54,61,.4)}.info-row:last-child{border:none}
+.ir-label{width:180px;font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px;flex-shrink:0}
+.ir-value{flex:1;font-size:14px;font-weight:500}
+.ir-action{margin-left:auto}
+.ir-btn{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s}.ir-btn:hover{border-color:var(--blue);color:var(--blue)}
+.ir-btn-danger{color:var(--red);border-color:transparent}.ir-btn-danger:hover{border-color:var(--red)}
+
+/* Edit mode */
+.edit-input{width:100%;max-width:300px;padding:7px 12px;border:1px solid var(--blue);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;font-family:inherit;outline:none}
+.ir-btn-save{background:var(--green);color:#000;border:none;font-weight:700}.ir-btn-save:hover{filter:brightness(1.1)}
+
+/* Activity heatmap placeholder */
+.heatmap-placeholder{background:var(--bg);border-radius:10px;padding:40px;text-align:center;color:var(--text-muted);font-size:14px}
+
+/* Toast */
+.toast{position:fixed;bottom:-60px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;z-index:999;transition:.3s;opacity:0}.toast.show{bottom:24px;opacity:1}.toast-success{background:var(--green);color:#000}.toast-error{background:var(--red);color:#fff}
+
+@media(max-width:768px){.navbar{padding:0 16px}.profile-page{padding:20px 16px}.stats-grid{grid-template-columns:repeat(2,1fr)}.p-info{flex-direction:column;align-items:center;text-align:center}.ir-label{width:120px}.p-meta{justify-content:center}}
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <a href="Explore.html" class="nav-brand">NIET<span>Code</span></a>
+    <div class="nav-links">
+        <a href="Explore.html" class="nav-link">Explore</a>
+        <a href="Problems.html" class="nav-link">Problems</a>
+        <a href="Blueprint.html" class="nav-link">Blueprint</a>
+        <a href="Placements.html" class="nav-link">Placements</a>
+        <a href="Profile.html" class="nav-link active">Profile</a>
+    </div>
+    <div class="nav-right" id="nav-right">
+        <a href="Login.html" class="btn-ghost">Log in</a>
+        <a href="Login.html" class="btn-cta">Get Started</a>
+    </div>
+</nav>
+
+<div class="profile-page" id="profile-page">
+    <!-- Header -->
+    <div class="p-header">
+        <div class="p-banner"></div>
+        <div class="p-info">
+            <div class="p-big-avatar" id="p-avatar">?</div>
+            <div class="p-details">
+                <div class="p-realname" id="p-name">Loading...</div>
+                <div class="p-email" id="p-email">—</div>
+                <div class="p-meta">
+                    <span class="p-meta-item"><i class="fa-solid fa-calendar"></i> <span id="p-joined">Joined —</span></span>
+                    <span class="p-meta-item"><i class="fa-solid fa-fire"></i> <span id="p-streak">0 day streak</span></span>
+                    <span class="p-meta-item"><i class="fa-solid fa-trophy"></i> <span id="p-rank">Rank #—</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card"><div class="stat-num stat-total" id="s-total">0</div><div class="stat-label">Total Solved</div></div>
+        <div class="stat-card"><div class="stat-num stat-easy" id="s-easy">0</div><div class="stat-label">Easy</div></div>
+        <div class="stat-card"><div class="stat-num stat-medium" id="s-medium">0</div><div class="stat-label">Medium</div></div>
+        <div class="stat-card"><div class="stat-num stat-hard" id="s-hard">0</div><div class="stat-label">Hard</div></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('info',this)">Profile Info</button>
+        <button class="tab-btn" onclick="switchTab('security',this)">Security</button>
+        <button class="tab-btn" onclick="switchTab('activity',this)">Activity</button>
+    </div>
+
+    <!-- Tab Content -->
+    <div id="tab-content"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+let currentUser = null;
+let db = null;
+
+// ═══════════════════════════════════════════════════
+// FIREBASE AUTH
+// ═══════════════════════════════════════════════════
+function initFirebase(){
+    if(typeof firebase==='undefined')return false;
+    try{
+        if(!firebase.apps.length){
+            firebase.initializeApp({
+                apiKey:"AIzaSyBvS473QS25-jvd_zm4VmOA5UX4yIbvytU",
+                authDomain:"niet-code.firebaseapp.com",
+                projectId:"niet-code",
+                storageBucket:"niet-code.firebasestorage.app",
+                messagingSenderId:"331564337114",
+                appId:"1:331564337114:web:56c072292a02d8fc4422e3"
+            });
+        }
+        db = firebase.firestore();
+        firebase.auth().onAuthStateChanged(user=>{
+            currentUser=user;
+            updateNavbar(user);
+            if(user) populateProfile(user);
+            else window.location.href='Login.html';
+        });
+        window.doSignOut=function(){firebase.auth().signOut()};
+        return true;
+    }catch(e){console.warn('Firebase:',e.message);return false}
+}
+if(!initFirebase()){
+    let a=0;const iv=setInterval(()=>{a++;if(initFirebase()||a>=6){clearInterval(iv);if(a>=6)window.location.href='Login.html';}},500);
+}
+
+function updateNavbar(user){
+    const nr=document.getElementById('nav-right');
+    if(!user){nr.innerHTML='<a href="Login.html" class="btn-ghost">Log in</a><a href="Login.html" class="btn-cta">Get Started</a>';return;}
+    const i=(user.displayName||user.email).charAt(0).toUpperCase();
+    const n=user.displayName||user.email.split('@')[0];
+    const e=user.email||'';
+    nr.innerHTML=`<div class="profile-wrap" id="profile-wrap"><div class="user-pill" onclick="document.getElementById('profile-wrap').classList.toggle('open')"><div class="user-avatar">${i}</div><span class="user-name">${n}</span><i class="fa-solid fa-chevron-down pill-chevron"></i></div><div class="profile-dropdown"><div class="dd-header"><div class="dd-avatar">${i}</div><div class="dd-info"><div class="dd-name">${n}</div><div class="dd-email">${e}</div></div></div><div class="dd-menu"><a href="Profile.html" class="dd-item"><i class="fa-regular fa-user"></i> My Profile</a><a href="Problems.html" class="dd-item"><i class="fa-solid fa-code"></i> My Submissions</a><div class="dd-divider"></div><a href="Profile.html" class="dd-item"><i class="fa-solid fa-gear"></i> Settings</a><div class="dd-divider"></div><button class="dd-item dd-danger" onclick="window.doSignOut()"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button></div></div></div>`;
+}
+document.addEventListener('click',e=>{const w=document.getElementById('profile-wrap');if(w&&!w.contains(e.target))w.classList.remove('open')});
+
+// ═══════════════════════════════════════════════════
+// POPULATE PROFILE FROM FIREBASE
+// ═══════════════════════════════════════════════════
+async function populateProfile(user){
+    const initial=(user.displayName||user.email).charAt(0).toUpperCase();
+    const name=user.displayName||user.email.split('@')[0];
+    document.getElementById('p-avatar').textContent=initial;
+    document.getElementById('p-name').textContent=name;
+    document.getElementById('p-email').textContent=user.email||'No email';
+    // Creation date
+    const created=user.metadata?.creationTime;
+    if(created){
+        const d=new Date(created);
+        document.getElementById('p-joined').textContent='Joined '+d.toLocaleDateString('en-US',{month:'short',year:'numeric'});
+    }
+    // Load stats from Firestore
+    let stats={total:0,easy:0,medium:0,hard:0,streak:0,rank:0};
+    try{
+        if(db){
+            const doc=await db.collection('users').doc(user.uid).get();
+            if(doc.exists){
+                const data=doc.data();
+                if(data.stats) stats={...stats,...data.stats};
+                // Calculate streak from lastActive
+                if(data.lastActive){
+                    const last=data.lastActive.toDate();
+                    const diffDays=Math.floor((Date.now()-last.getTime())/(1000*60*60*24));
+                    stats.streak=diffDays<=1?(stats.streak||1):0;
+                }
+            }
+        }
+    }catch(e){console.warn('Load stats:',e.message)}
+    document.getElementById('s-total').textContent=stats.total;
+    document.getElementById('s-easy').textContent=stats.easy;
+    document.getElementById('s-medium').textContent=stats.medium;
+    document.getElementById('s-hard').textContent=stats.hard;
+    document.getElementById('p-streak').textContent=(stats.streak||0)+' day streak';
+    document.getElementById('p-rank').textContent=stats.total>0?'Rank #'+Math.max(1,100-stats.total*5):'Unranked';
+    // Load default tab
+    switchTab('info',document.querySelector('.tab-btn'));
+}
+
+// ═══════════════════════════════════════════════════
+// TAB SWITCHING
+// ═══════════════════════════════════════════════════
+function switchTab(key,btn){
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const c=document.getElementById('tab-content');
+    if(key==='info') c.innerHTML=renderInfoTab();
+    else if(key==='security') c.innerHTML=renderSecurityTab();
+    else if(key==='activity') c.innerHTML=renderActivityTab();
+}
+
+function renderInfoTab(){
+    const name=currentUser?.displayName||'—';
+    const email=currentUser?.email||'—';
+    return `
+    <div class="section-card">
+        <div class="sc-title"><i class="fa-regular fa-id-card"></i> Personal Details</div>
+        <div class="info-row" id="row-name">
+            <div class="ir-label">Display Name</div>
+            <div class="ir-value" id="val-name">${name}</div>
+            <div class="ir-action"><button class="ir-btn" onclick="editField('name')">Edit</button></div>
+        </div>
+        <div class="info-row">
+            <div class="ir-label">Email</div>
+            <div class="ir-value">${email}</div>
+            <div class="ir-action"><span style="font-size:12px;color:var(--green)"><i class="fa-solid fa-circle-check"></i> Verified</span></div>
+        </div>
+        <div class="info-row">
+            <div class="ir-label">Account ID</div>
+            <div class="ir-value" style="font-family:'JetBrains Mono';font-size:12px;color:var(--text-muted)">${currentUser?.uid||'—'}</div>
+        </div>
+        <div class="info-row">
+            <div class="ir-label">Provider</div>
+            <div class="ir-value">${currentUser?.providerData?.[0]?.providerId==='google.com'?'<i class="fa-brands fa-google" style="color:var(--blue)"></i> Google':'<i class="fa-solid fa-envelope" style="color:var(--orange)"></i> Email/Password'}</div>
+        </div>
+    </div>`;
+}
+
+function renderSecurityTab(){
+    return `
+    <div class="section-card">
+        <div class="sc-title"><i class="fa-solid fa-shield-halved"></i> Account Security</div>
+        <div class="info-row">
+            <div class="ir-label">Password</div>
+            <div class="ir-value">••••••••</div>
+            <div class="ir-action"><button class="ir-btn" onclick="changePassword()"><i class="fa-solid fa-key"></i> Change</button></div>
+        </div>
+        <div class="info-row">
+            <div class="ir-label">Last Sign In</div>
+            <div class="ir-value">${currentUser?.metadata?.lastSignInTime?new Date(currentUser.metadata.lastSignInTime).toLocaleString():'—'}</div>
+        </div>
+        <div class="info-row">
+            <div class="ir-label">Account Created</div>
+            <div class="ir-value">${currentUser?.metadata?.creationTime?new Date(currentUser.metadata.creationTime).toLocaleString():'—'}</div>
+        </div>
+    </div>
+    <div class="section-card">
+        <div class="sc-title" style="color:var(--red)"><i class="fa-solid fa-triangle-exclamation"></i> Danger Zone</div>
+        <div class="info-row">
+            <div class="ir-label">Sign Out</div>
+            <div class="ir-value" style="color:var(--text-muted)">Sign out from all devices</div>
+            <div class="ir-action"><button class="ir-btn ir-btn-danger" onclick="window.doSignOut()"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button></div>
+        </div>
+    </div>`;
+}
+
+function renderActivityTab(){
+    return `
+    <div class="section-card">
+        <div class="sc-title"><i class="fa-solid fa-chart-line"></i> Recent Activity</div>
+        <div class="heatmap-placeholder">
+            <i class="fa-solid fa-code" style="font-size:40px;color:var(--orange);display:block;margin-bottom:12px"></i>
+            <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px">Start solving to see your activity!</div>
+            <div>Your submission history and heatmap will appear here once you solve problems.</div>
+            <a href="Problems.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:var(--orange);color:#000;border-radius:8px;font-weight:700;text-decoration:none">Browse Problems</a>
+        </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════════════════
+async function editField(field){
+    if(field==='name'){
+        const row=document.getElementById('row-name');
+        const valEl=document.getElementById('val-name');
+        const actionEl=row.querySelector('.ir-action');
+        const current=valEl.textContent;
+        valEl.innerHTML=`<input class="edit-input" id="edit-name" value="${current}" autofocus>`;
+        document.getElementById('edit-name').focus();
+        actionEl.innerHTML='<button class="ir-btn ir-btn-save" onclick="saveName()">Save</button>';
+    }
+}
+
+async function saveName(){
+    const newName=document.getElementById('edit-name').value.trim();
+    if(!newName){showToast('Name cannot be empty','error');return;}
+    try{
+        await currentUser.updateProfile({displayName:newName});
+        await currentUser.reload();
+        showToast('Name updated!','success');
+        document.getElementById('p-name').textContent=newName;
+        updateNavbar(firebase.auth().currentUser);
+        switchTab('info',document.querySelector('.tab-btn'));
+    }catch(e){showToast('Error: '+e.message,'error');}
+}
+
+async function changePassword(){
+    if(!currentUser?.email){showToast('No email found','error');return;}
+    try{
+        await firebase.auth().sendPasswordResetEmail(currentUser.email);
+        showToast('Password reset email sent to '+currentUser.email,'success');
+    }catch(e){showToast('Error: '+e.message,'error');}
+}
+
+function showToast(msg,type='success'){
+    const t=document.getElementById('toast');
+    t.className='toast toast-'+type+' show';
+    t.innerHTML=`<i class="fa-solid ${type==='success'?'fa-circle-check':'fa-circle-exclamation'}"></i> ${msg}`;
+    clearTimeout(t._timer);
+    t._timer=setTimeout(()=>{t.className='toast'},4000);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIETCode | Explore</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+    <!-- Firebase (must load BEFORE Monaco's AMD loader to avoid conflict) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+
+    <style>
+        :root {
+            --orange: #ffa116;
+            --orange-glow: rgba(255,161,22,0.25);
+            --orange-dim: rgba(255,161,22,0.08);
+            --bg: #080b10;
+            --bg2: #0d1117;
+            --surface: #111820;
+            --surface2: #182030;
+            --border: #1e2d40;
+            --border2: #243040;
+            --text: #e8f0fe;
+            --text-muted: #6b7f99;
+            --text-soft: #9ab0cc;
+            --green: #00d4aa;
+            --blue: #4d9fff;
+            --red: #ff5757;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+
+        /* ── NAVBAR ── */
+        .navbar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            height: 64px; display: flex; align-items: center; justify-content: space-between;
+            padding: 0 48px;
+            background: rgba(8,11,16,0.85); backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border); transition: border-color 0.3s;
+        }
+        .nav-brand { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--orange); text-decoration: none; letter-spacing: -0.5px; }
+        .nav-brand span { color: var(--text); }
+        .nav-links { display: flex; gap: 36px; align-items: center; }
+        .nav-link { background: none; border: none; font-family: inherit; text-decoration: none; color: var(--text-muted); font-size: 14px; font-weight: 500; transition: color 0.2s; cursor: pointer; padding: 0; }
+        .nav-link:hover, .nav-link.active { color: var(--text); }
+        .nav-right { display: flex; gap: 12px; align-items: center; min-width: 180px; justify-content: flex-end; }
+
+        /* Nav skeleton loader — shown while Firebase checks auth */
+        .nav-skeleton { display: flex; gap: 10px; align-items: center; }
+        .skel { background: var(--surface2); border-radius: 8px; animation: skel-pulse 1.2s ease-in-out infinite; }
+        .skel-btn  { width: 72px;  height: 32px; }
+        .skel-pill { width: 130px; height: 32px; border-radius: 10px; }
+        @keyframes skel-pulse { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
+
+        /* Guest buttons */
+        .btn-ghost { padding: 8px 18px; border-radius: 8px; border: 1px solid var(--border2); background: transparent; color: var(--text-soft); font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none; transition: 0.2s; font-family: inherit; display: inline-flex; align-items: center; }
+        .btn-ghost:hover { border-color: var(--orange); color: var(--orange); }
+        .btn-cta { padding: 8px 20px; border-radius: 8px; border: none; background: var(--orange); color: #000; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; transition: 0.2s; font-family: inherit; display: inline-flex; align-items: center; }
+        .btn-cta:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+        /* Logged-in user pill + dropdown */
+        .profile-wrap { position: relative; }
+        .user-pill { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border2); border-radius: 10px; padding: 5px 14px 5px 6px; cursor: pointer; transition: 0.2s; user-select: none; }
+        .user-pill:hover { border-color: var(--orange); }
+        .user-avatar { width: 32px; height: 32px; border-radius: 8px; background: var(--orange); color: #000; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; font-family: 'Syne', sans-serif; flex-shrink: 0; }
+        .user-name { font-size: 13px; font-weight: 600; color: var(--text); max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .pill-chevron { color: var(--text-muted); font-size: 10px; transition: transform 0.2s; }
+        .profile-wrap.open .pill-chevron { transform: rotate(180deg); }
+
+        /* Dropdown menu */
+        .profile-dropdown { position: absolute; top: calc(100% + 8px); right: 0; width: 280px; background: var(--surface); border: 1px solid var(--border2); border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); opacity: 0; visibility: hidden; transform: translateY(-8px); transition: opacity 0.2s, transform 0.2s, visibility 0.2s; z-index: 200; overflow: hidden; }
+        .profile-wrap.open .profile-dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
+        .dd-header { padding: 18px 18px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+        .dd-avatar { width: 44px; height: 44px; border-radius: 12px; background: var(--orange); color: #000; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; font-family: 'Syne', sans-serif; flex-shrink: 0; }
+        .dd-info { flex: 1; min-width: 0; }
+        .dd-name { font-size: 15px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .dd-email { font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .dd-menu { padding: 6px 0; }
+        .dd-item { display: flex; align-items: center; gap: 12px; padding: 11px 18px; font-size: 14px; font-weight: 500; color: var(--text-soft); cursor: pointer; transition: 0.15s; border: none; background: none; width: 100%; text-align: left; font-family: inherit; text-decoration: none; }
+        .dd-item:hover { background: var(--surface2); color: var(--text); }
+        .dd-item i { width: 18px; text-align: center; font-size: 14px; color: var(--text-muted); }
+        .dd-item:hover i { color: var(--orange); }
+        .dd-divider { height: 1px; background: var(--border); margin: 4px 0; }
+        .dd-item.dd-danger { color: var(--red); }
+        .dd-item.dd-danger i { color: var(--red); }
+        .dd-item.dd-danger:hover { background: rgba(248,81,73,0.08); }
+
+
+        /* ── AUTH GATE MODAL ── */
+        .auth-gate {
+            display: none; position: fixed; inset: 0; z-index: 2000;
+            background: rgba(0,0,0,0.75); backdrop-filter: blur(10px);
+            align-items: center; justify-content: center;
+        }
+        .auth-gate.show { display: flex; }
+        .gate-card {
+            background: var(--surface); border: 1px solid var(--border2);
+            border-radius: 18px; padding: 44px 40px; max-width: 380px; width: 90%;
+            text-align: center; animation: popIn 0.3s cubic-bezier(.16,1,.3,1);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+        }
+        @keyframes popIn { from{opacity:0;transform:scale(0.9)} to{opacity:1;transform:scale(1)} }
+        .gate-icon { font-size: 40px; margin-bottom: 18px; }
+        .gate-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; margin-bottom: 10px; }
+        .gate-sub { font-size: 14px; color: var(--text-soft); line-height: 1.6; margin-bottom: 28px; }
+        .gate-btn-primary { display: block; width: 100%; padding: 13px; border-radius: 10px; background: var(--orange); color: #000; border: none; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; transition: 0.2s; text-decoration: none; margin-bottom: 10px; }
+        .gate-btn-primary:hover { filter: brightness(1.1); }
+        .gate-btn-cancel { display: block; width: 100%; padding: 11px; border-radius: 10px; background: transparent; border: 1px solid var(--border2); color: var(--text-muted); font-size: 14px; cursor: pointer; font-family: inherit; transition: 0.2s; }
+        .gate-btn-cancel:hover { border-color: var(--text-muted); color: var(--text); }
+
+        /* ── HERO ── */
+        .hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 120px 24px 80px; position: relative; overflow: hidden; }
+        .hero-bg { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+        .hero-bg::before { content: ''; position: absolute; width: 800px; height: 800px; background: radial-gradient(circle, rgba(255,161,22,0.12) 0%, transparent 65%); top: 50%; left: 50%; transform: translate(-50%, -60%); animation: pulse-glow 6s ease-in-out infinite; }
+        .hero-bg::after { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(30,45,64,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(30,45,64,0.4) 1px, transparent 1px); background-size: 60px 60px; }
+        @keyframes pulse-glow { 0%,100%{opacity:0.6;transform:translate(-50%,-60%) scale(1)} 50%{opacity:1;transform:translate(-50%,-60%) scale(1.08)} }
+        .orb { position: absolute; border-radius: 50%; filter: blur(60px); pointer-events: none; animation: float-orb 8s ease-in-out infinite; }
+        .orb1 { width: 300px; height: 300px; background: rgba(255,161,22,0.08); top: 15%; left: 5%; }
+        .orb2 { width: 200px; height: 200px; background: rgba(77,159,255,0.07); top: 60%; right: 8%; animation-delay: -3s; }
+        .orb3 { width: 150px; height: 150px; background: rgba(0,212,170,0.06); bottom: 20%; left: 20%; animation-delay: -5s; }
+        @keyframes float-orb { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-30px)} }
+        .hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 100px; background: var(--orange-dim); border: 1px solid rgba(255,161,22,0.2); color: var(--orange); font-size: 12px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 28px; animation: fadeSlideDown 0.6s ease both; }
+        .hero-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--orange); animation: blink 2s infinite; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        .hero-title { font-family: 'Syne', sans-serif; font-size: clamp(48px,7vw,90px); font-weight: 800; line-height: 1.05; letter-spacing: -2px; margin-bottom: 24px; animation: fadeSlideDown 0.6s 0.1s ease both; }
+        .hero-title .line1 { display: block; color: var(--text); }
+        .hero-title .line2 { display: block; background: linear-gradient(135deg, var(--orange) 0%, #ffce56 50%, var(--orange) 100%); background-size: 200%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shimmer 3s linear infinite; }
+        @keyframes shimmer { 0%{background-position:0%} 100%{background-position:200%} }
+        .hero-sub { font-size: 18px; font-weight: 300; color: var(--text-soft); line-height: 1.7; max-width: 540px; margin: 0 auto 40px; animation: fadeSlideDown 0.6s 0.2s ease both; }
+        .hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; animation: fadeSlideDown 0.6s 0.3s ease both; }
+        .btn-hero-primary { padding: 14px 32px; border-radius: 10px; border: none; background: var(--orange); color: #000; font-size: 15px; font-weight: 700; cursor: pointer; text-decoration: none; transition: 0.25s; font-family: inherit; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-hero-primary:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 12px 40px var(--orange-glow); }
+        .btn-hero-secondary { padding: 14px 32px; border-radius: 10px; border: 1px solid var(--border2); background: transparent; color: var(--text-soft); font-size: 15px; font-weight: 500; cursor: pointer; text-decoration: none; transition: 0.25s; font-family: inherit; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-hero-secondary:hover { border-color: var(--text-muted); color: var(--text); background: var(--surface); }
+        .hero-code-preview { margin-top: 72px; position: relative; z-index: 1; animation: fadeSlideUp 0.8s 0.4s ease both; max-width: 720px; width: 100%; }
+        .code-window { background: var(--surface); border: 1px solid var(--border2); border-radius: 14px; overflow: hidden; box-shadow: 0 40px 80px rgba(0,0,0,0.5); }
+        .code-titlebar { background: var(--surface2); padding: 12px 18px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); }
+        .wdot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot-red{background:#ff5f57} .dot-yellow{background:#febc2e} .dot-green{background:#28c840}
+        .code-filename { margin-left: 8px; font-size: 12px; color: var(--text-muted); font-family: monospace; }
+        .code-body { padding: 24px; text-align: left; font-family: 'Fira Code','Consolas',monospace; font-size: 13px; line-height: 1.9; }
+        .c-kw{color:#ff7b72} .c-fn{color:#d2a8ff} .c-num{color:#f2cc60} .c-cm{color:var(--text-muted);font-style:italic} .c-var{color:#e6edf3} .c-op{color:#ffa657}
+        .typing-cursor { display: inline-block; width: 2px; height: 14px; background: var(--orange); margin-left: 2px; vertical-align: middle; animation: blink 1s infinite; }
+        @keyframes fadeSlideDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes fadeSlideUp   { from{opacity:0;transform:translateY(30px)}  to{opacity:1;transform:translateY(0)} }
+
+        /* ── STATS ── */
+        .stats-section { padding: 0 48px 100px; display: flex; justify-content: center; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; max-width: 900px; width: 100%; }
+        .stat-card { background: var(--surface); padding: 36px 28px; text-align: center; transition: 0.3s; cursor: default; }
+        .stat-card:hover { background: var(--surface2); }
+        .stat-number { font-family: 'Syne', sans-serif; font-size: 40px; font-weight: 800; color: var(--orange); line-height: 1; margin-bottom: 8px; letter-spacing: -1px; }
+        .stat-label { font-size: 13px; color: var(--text-muted); }
+
+        /* ── SHARED ── */
+        .section-tag { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--orange); margin-bottom: 16px; }
+        .section-tag::before { content: ''; width: 20px; height: 1px; background: var(--orange); }
+        .section-title { font-family: 'Syne', sans-serif; font-size: clamp(32px,4vw,52px); font-weight: 800; line-height: 1.1; letter-spacing: -1.5px; margin-bottom: 16px; }
+        .section-sub { font-size: 16px; color: var(--text-soft); max-width: 480px; line-height: 1.7; margin-bottom: 60px; }
+
+
+        /* ── FEATURES ── */
+        .features-section { padding: 100px 48px; max-width: 1200px; margin: 0 auto; }
+        .features-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+        .feature-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px; transition: 0.3s; position: relative; overflow: hidden; cursor: default; }
+        .feature-card::before { content:''; position:absolute; inset:0; background:radial-gradient(circle at 0% 0%, var(--card-glow,rgba(255,161,22,0.06)) 0%, transparent 60%); opacity:0; transition:0.3s; }
+        .feature-card:hover { border-color: var(--border2); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .feature-card:hover::before { opacity: 1; }
+        .feature-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; margin-bottom:20px; }
+        .fi-orange{background:rgba(255,161,22,0.12);color:var(--orange);--card-glow:rgba(255,161,22,0.08)}
+        .fi-blue  {background:rgba(77,159,255,0.12); color:var(--blue);  --card-glow:rgba(77,159,255,0.08)}
+        .fi-green {background:rgba(0,212,170,0.12);  color:var(--green); --card-glow:rgba(0,212,170,0.08)}
+        .fi-red   {background:rgba(255,87,87,0.12);  color:var(--red);   --card-glow:rgba(255,87,87,0.08)}
+        .fi-purple{background:rgba(167,139,250,0.12);color:#a78bfa;      --card-glow:rgba(167,139,250,0.08)}
+        .fi-yellow{background:rgba(255,206,86,0.12); color:#ffce56;      --card-glow:rgba(255,206,86,0.08)}
+        .feature-title { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; margin-bottom:10px; }
+        .feature-desc  { font-size:14px; color:var(--text-soft); line-height:1.7; }
+
+        /* ── TOPICS ── */
+        .topics-section { padding: 0 48px 100px; max-width: 1200px; margin: 0 auto; }
+        .topics-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-top: 50px; }
+        .topic-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:24px 20px; display:flex; align-items:center; gap:16px; text-decoration:none; transition:0.25s; cursor:pointer; }
+        .topic-card:hover { border-color:var(--orange); background:var(--surface2); transform:translateY(-2px); }
+        .topic-icon { width:42px; height:42px; border-radius:10px; background:var(--orange-dim); border:1px solid rgba(255,161,22,0.15); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+        .topic-info { flex:1; min-width:0; }
+        .topic-name { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .topic-count { font-size:12px; color:var(--text-muted); }
+        .topic-arrow { color:var(--text-muted); font-size:11px; transition:0.2s; }
+        .topic-card:hover .topic-arrow { color:var(--orange); transform:translateX(3px); }
+
+        /* ── HOW IT WORKS ── */
+        .hiw-section { padding: 100px 48px; background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+        .hiw-inner { max-width: 1100px; margin: 0 auto; }
+        .hiw-steps { display: grid; grid-template-columns: repeat(3,1fr); margin-top: 60px; position: relative; }
+        .hiw-steps::before { content:''; position:absolute; top:28px; left:calc(16.67% + 28px); right:calc(16.67% + 28px); height:1px; background:linear-gradient(90deg, var(--border2), var(--orange), var(--border2)); }
+        .step { text-align:center; padding:0 32px; }
+        .step-num { width:56px; height:56px; border-radius:50%; background:var(--surface2); border:2px solid var(--border2); display:flex; align-items:center; justify-content:center; font-family:'Syne',sans-serif; font-size:20px; font-weight:800; color:var(--orange); margin:0 auto 24px; position:relative; z-index:1; transition:0.3s; }
+        .step:hover .step-num { background:var(--orange); color:#000; border-color:var(--orange); box-shadow:0 0 30px var(--orange-glow); }
+        .step-title { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; margin-bottom:10px; }
+        .step-desc  { font-size:14px; color:var(--text-soft); line-height:1.7; }
+
+        /* ── LEADERBOARD ── */
+        .lb-section { padding: 100px 48px; max-width: 1100px; margin: 0 auto; }
+        .lb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; margin-top: 60px; }
+        .lb-table { background:var(--surface); border:1px solid var(--border); border-radius:16px; overflow:hidden; }
+        .lb-header { padding:16px 20px; background:var(--surface2); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; font-size:13px; font-weight:600; color:var(--text-muted); }
+        .lb-row { display:flex; align-items:center; gap:14px; padding:14px 20px; border-bottom:1px solid var(--border); transition:0.2s; }
+        .lb-row:last-child { border-bottom:none; }
+        .lb-row:hover { background:var(--surface2); }
+        .lb-rank { font-family:'Syne',sans-serif; font-size:16px; font-weight:800; width:28px; text-align:center; }
+        .rank-1{color:#ffd700} .rank-2{color:#c0c0c0} .rank-3{color:#cd7f32} .rank-other{color:var(--text-muted);font-size:13px}
+        .lb-avatar { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0; }
+        .lb-name { flex:1; font-weight:500; font-size:14px; }
+        .lb-score { font-family:'Syne',sans-serif; font-weight:700; font-size:15px; color:var(--orange); }
+        .lb-solved { font-size:12px; color:var(--text-muted); text-align:right; }
+        .lb-text-side { padding-left:20px; }
+        .rank-badges { display:flex; gap:10px; margin-top:32px; flex-wrap:wrap; }
+        .rank-badge { padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; border:1px solid; display:flex; align-items:center; gap:6px; }
+        .rb-gold  {background:rgba(255,215,0,0.08);  border-color:rgba(255,215,0,0.3);   color:#ffd700}
+        .rb-silver{background:rgba(192,192,192,0.08);border-color:rgba(192,192,192,0.3); color:#c0c0c0}
+        .rb-bronze{background:rgba(205,127,50,0.08); border-color:rgba(205,127,50,0.3);  color:#cd7f32}
+
+        /* ── CTA ── */
+        .cta-section { padding:120px 48px; text-align:center; position:relative; overflow:hidden; }
+        .cta-section::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 50%, rgba(255,161,22,0.08) 0%, transparent 70%); }
+        .cta-inner { position:relative; z-index:1; max-width:600px; margin:0 auto; }
+        .cta-title { font-family:'Syne',sans-serif; font-size:clamp(36px,5vw,64px); font-weight:800; line-height:1.1; letter-spacing:-2px; margin-bottom:20px; }
+        .cta-sub { font-size:17px; color:var(--text-soft); line-height:1.7; margin-bottom:40px; }
+        .cta-actions { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+
+        /* ── FOOTER ── */
+        footer { padding:40px 48px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; }
+        .footer-brand { font-family:'Syne',sans-serif; font-size:18px; font-weight:800; color:var(--orange); }
+        .footer-brand span { color:var(--text-muted); }
+        .footer-copy { font-size:13px; color:var(--text-muted); }
+        .footer-links { display:flex; gap:24px; }
+        .footer-link { font-size:13px; color:var(--text-muted); transition:color 0.2s; cursor:pointer; background:none; border:none; font-family:inherit; text-decoration:none; padding:0; }
+        .footer-link:hover { color:var(--text); }
+
+        /* ── SCROLL REVEAL ── */
+        .reveal { opacity:0; transform:translateY(30px); transition:opacity 0.7s ease, transform 0.7s ease; }
+        .reveal.visible { opacity:1; transform:translateY(0); }
+        .reveal-delay-1{transition-delay:0.1s} .reveal-delay-2{transition-delay:0.2s} .reveal-delay-3{transition-delay:0.3s}
+
+        @media(max-width:900px){
+            .navbar{padding:0 20px} .nav-links{display:none}
+            .stats-grid{grid-template-columns:repeat(2,1fr)}
+            .features-grid,.lb-grid{grid-template-columns:1fr}
+            .topics-grid{grid-template-columns:repeat(2,1fr)}
+            .hiw-steps{grid-template-columns:1fr;gap:40px} .hiw-steps::before{display:none}
+            .sandbox-body{grid-template-columns:1fr;height:auto}
+            .prob-pane{height:180px;border-right:none;border-bottom:1px solid var(--border)}
+            .editor-area{height:380px}
+            .sandbox-section,.features-section,.topics-section,.lb-section{padding:60px 20px}
+            .stats-section{padding:0 20px 60px} .hiw-section,.cta-section{padding:60px 20px}
+            footer{padding:30px 20px;flex-direction:column;text-align:center}
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── AUTH GATE MODAL ── -->
+<div class="auth-gate" id="auth-gate">
+    <div class="gate-card">
+        <div class="gate-icon">🔐</div>
+        <div class="gate-title">Login Required</div>
+        <div class="gate-sub">You need to be signed in to access this page. It's free and takes 30 seconds!</div>
+        <button class="gate-btn-primary" onclick="gateLogin()"><i class="fa-solid fa-right-to-bracket"></i> &nbsp;Sign In / Sign Up</button>
+        <button class="gate-btn-cancel" onclick="closeGate()">Maybe later</button>
+    </div>
+</div>
+
+<!-- ── NAVBAR ── -->
+<nav class="navbar" id="navbar">
+    <a href="Explore.html" class="nav-brand">NIET<span>Code</span></a>
+    <div class="nav-links">
+        <a href="Explore.html" class="nav-link active">Explore</a>
+        <button class="nav-link" onclick="guardedNav('Problems.html')">Problems</button>
+        <button class="nav-link" onclick="guardedNav('Placements.html')">Placements</button>
+        <button class="nav-link" onclick="guardedNav('Profile.html')">Profile</button>
+    </div>
+    <!-- ⚠️ Start empty — Firebase will fill this in within ~300ms -->
+    <!-- Showing a skeleton avoids the "flash of login buttons" -->
+    <div class="nav-right" id="nav-right">
+        <div class="nav-skeleton">
+            <div class="skel skel-btn"></div>
+            <div class="skel skel-pill"></div>
+        </div>
+    </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero">
+    <div class="hero-bg"></div>
+    <div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
+    <div class="hero-badge"><div class="hero-badge-dot"></div>Built for NIET Students</div>
+    <h1 class="hero-title">
+        <span class="line1">Code Smarter.</span>
+        <span class="line2">Rank Higher.</span>
+    </h1>
+    <p class="hero-sub">The coding platform designed for NIET — solve DSA problems, compete with batchmates, and land your dream placement.</p>
+    <div class="hero-actions">
+        <button onclick="guardedNav('Problems.html')" class="btn-hero-primary"><i class="fa-solid fa-code"></i> Start Solving</button>
+        <a href="Login.html" class="btn-hero-secondary" id="hero-secondary-btn"><i class="fa-regular fa-user"></i> Create Account</a>
+    </div>
+    <div class="hero-code-preview">
+        <div class="code-window">
+            <div class="code-titlebar">
+                <div class="wdot dot-red"></div><div class="wdot dot-yellow"></div><div class="wdot dot-green"></div>
+                <span class="code-filename">twoSum.js — NIETCode Editor</span>
+            </div>
+            <div class="code-body">
+                <div><span class="c-cm">// ✅ Two Sum — Accepted in 52ms</span></div>
+                <div>&nbsp;</div>
+                <div><span class="c-kw">function</span> <span class="c-fn">twoSum</span>(<span class="c-var">nums</span>, <span class="c-var">target</span>) {</div>
+                <div>&nbsp;&nbsp;<span class="c-kw">const</span> <span class="c-var">map</span> = <span class="c-kw">new</span> <span class="c-fn">Map</span>();</div>
+                <div>&nbsp;&nbsp;<span class="c-kw">for</span> (<span class="c-kw">let</span> <span class="c-var">i</span> = <span class="c-num">0</span>; <span class="c-var">i</span> &lt; <span class="c-var">nums</span>.<span class="c-fn">length</span>; <span class="c-var">i</span>++) {</div>
+                <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-kw">const</span> <span class="c-var">complement</span> = <span class="c-var">target</span> <span class="c-op">-</span> <span class="c-var">nums</span>[<span class="c-var">i</span>];</div>
+                <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-kw">if</span> (<span class="c-var">map</span>.<span class="c-fn">has</span>(<span class="c-var">complement</span>)) <span class="c-kw">return</span> [<span class="c-var">map</span>.<span class="c-fn">get</span>(<span class="c-var">complement</span>), <span class="c-var">i</span>];</div>
+                <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-var">map</span>.<span class="c-fn">set</span>(<span class="c-var">nums</span>[<span class="c-var">i</span>], <span class="c-var">i</span>);</div>
+                <div>&nbsp;&nbsp;}</div>
+                <div>}<span class="typing-cursor"></span></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── STATS ── -->
+<div class="stats-section">
+    <div class="stats-grid">
+        <div class="stat-card reveal"><div class="stat-number" data-target="120">0</div><div class="stat-label">Problems Available</div></div>
+        <div class="stat-card reveal reveal-delay-1"><div class="stat-number" data-target="1400">0</div><div class="stat-label">Active Students</div></div>
+        <div class="stat-card reveal reveal-delay-2"><div class="stat-number" data-target="8">0</div><div class="stat-label">Topics Covered</div></div>
+        <div class="stat-card reveal reveal-delay-3"><div class="stat-number" data-target="95">0</div><div class="stat-label">Placement Rate %</div></div>
+    </div>
+</div>
+
+
+
+<!-- ── FEATURES ── -->
+<div class="features-section">
+    <div class="section-tag">Why NIETCode</div>
+    <h2 class="section-title reveal">Everything you need<br>to crack placements</h2>
+    <p class="section-sub reveal">A complete practice environment — from your first array problem to cracking FAANG interviews.</p>
+    <div class="features-grid">
+        <div class="feature-card reveal"><div class="feature-icon fi-orange"><i class="fa-solid fa-bolt"></i></div><div class="feature-title">Live Browser Compiler</div><div class="feature-desc">Write and run JavaScript directly in the browser. Instant feedback with Monaco Editor — the same engine as VS Code.</div></div>
+        <div class="feature-card reveal reveal-delay-1"><div class="feature-icon fi-blue"><i class="fa-solid fa-layer-group"></i></div><div class="feature-title">Curated DSA Roadmap</div><div class="feature-desc">Problems organized by topic and difficulty — Arrays, Linked Lists, Stacks, Trees, DP and more.</div></div>
+        <div class="feature-card reveal reveal-delay-2"><div class="feature-icon fi-green"><i class="fa-solid fa-ranking-star"></i></div><div class="feature-title">College Leaderboard</div><div class="feature-desc">Compete with your batchmates in real-time. See your rank within NIET and climb to the top.</div></div>
+        <div class="feature-card reveal"><div class="feature-icon fi-purple"><i class="fa-solid fa-flask"></i></div><div class="feature-title">NIET Virtual Labs</div><div class="feature-desc">Integrated virtual labs aligned with your NIET syllabus. Practice exactly what your professors teach.</div></div>
+        <div class="feature-card reveal reveal-delay-1"><div class="feature-icon fi-yellow"><i class="fa-solid fa-chart-line"></i></div><div class="feature-title">Progress Analytics</div><div class="feature-desc">Track your solving streak, weak topics, and submission history. Know exactly where to focus next.</div></div>
+        <div class="feature-card reveal reveal-delay-2"><div class="feature-icon fi-red"><i class="fa-solid fa-shield-halved"></i></div><div class="feature-title">Secure Auth</div><div class="feature-desc">Sign in with your college email or Google. Your progress is saved securely across all devices.</div></div>
+    </div>
+</div>
+
+<!-- ── TOPICS ── -->
+<div class="topics-section">
+    <div class="section-tag">Topics</div>
+    <h2 class="section-title reveal">Start with any topic</h2>
+    <div class="topics-grid">
+        <div class="topic-card reveal"          onclick="guardedNav('Problems.html')"><div class="topic-icon">📦</div><div class="topic-info"><div class="topic-name">Arrays</div><div class="topic-count">7 problems</div></div><i class="fa-solid fa-chevron-right topic-arrow"></i></div>
+        <div class="topic-card reveal reveal-delay-1" onclick="guardedNav('Problems.html')"><div class="topic-icon">🔗</div><div class="topic-info"><div class="topic-name">Linked Lists</div><div class="topic-count">6 problems</div></div><i class="fa-solid fa-chevron-right topic-arrow"></i></div>
+        <div class="topic-card reveal reveal-delay-2" onclick="guardedNav('Problems.html')"><div class="topic-icon">📚</div><div class="topic-info"><div class="topic-name">Stacks</div><div class="topic-count">4 problems</div></div><i class="fa-solid fa-chevron-right topic-arrow"></i></div>
+        <div class="topic-card reveal reveal-delay-3" onclick="guardedNav('Problems.html')"><div class="topic-icon">🔄</div><div class="topic-info"><div class="topic-name">Queues</div><div class="topic-count">3 problems</div></div><i class="fa-solid fa-chevron-right topic-arrow"></i></div>
+        <div class="topic-card reveal"          onclick="guardedNav('Problems.html')"><div class="topic-icon">🌳</div><div class="topic-info"><div class="topic-name">Trees</div><div class="topic-count">Coming soon</div></div><i class="fa-solid fa-chevron-right topic-arrow"></i></div>
+        <div class="topic-card reveal reveal-delay-1" onclick="guardedNav('Problems.html')"><div class="topic-icon">🔍</div><div class="topic-info"><div class="topic-name">Binary Search</div><div class="topic-count">Coming soon</div></div><i class="fa-solid fa-chevron-right topic-arrow"></i></div>
+        <div class="topic-card reveal reveal-delay-2" onclick="guardedNav('Problems.html')"><div class="topic-icon">🔀</div><div class="topic-info"><div class="topic-name">Sorting</div><div class="topic-count">Coming soon</div></div><i class="fa-solid fa-chevron-right topic-arrow"></i></div>
+        <div class="topic-card reveal reveal-delay-3" onclick="guardedNav('Problems.html')"><div class="topic-icon">💡</div><div class="topic-info"><div class="topic-name">Dynamic Programming</div><div class="topic-count">Coming soon</div></div><i class="fa-solid fa-chevron-right topic-arrow"></i></div>
+    </div>
+</div>
+
+<!-- ── HOW IT WORKS ── -->
+<div class="hiw-section">
+    <div class="hiw-inner">
+        <div style="text-align:center;">
+            <div class="section-tag" style="justify-content:center;">How it works</div>
+            <h2 class="section-title reveal" style="text-align:center;">Three steps to<br>placement ready</h2>
+        </div>
+        <div class="hiw-steps">
+            <div class="step reveal"><div class="step-num">1</div><div class="step-title">Create your account</div><div class="step-desc">Sign up with your NIET email or Google. Your profile and progress are saved automatically.</div></div>
+            <div class="step reveal reveal-delay-1"><div class="step-num">2</div><div class="step-title">Pick a topic & solve</div><div class="step-desc">Browse problems by topic and difficulty. Write code in the browser, run test cases instantly.</div></div>
+            <div class="step reveal reveal-delay-2"><div class="step-num">3</div><div class="step-title">Rank up & get placed</div><div class="step-desc">Track your progress, climb the college leaderboard, and walk into interviews with confidence.</div></div>
+        </div>
+    </div>
+</div>
+
+<!-- ── LEADERBOARD ── -->
+<div class="lb-section">
+    <div class="lb-grid">
+        <div class="lb-table reveal">
+            <div class="lb-header"><span><i class="fa-solid fa-trophy" style="color:var(--orange);margin-right:6px;"></i>College Leaderboard</span><span>This Week</span></div>
+            <div class="lb-row"><div class="lb-rank rank-1">🥇</div><div class="lb-avatar" style="background:rgba(255,161,22,0.15);color:var(--orange);">K</div><div class="lb-name">Kartikey K.</div><div><div class="lb-score">2,840</div><div class="lb-solved">47 solved</div></div></div>
+            <div class="lb-row"><div class="lb-rank rank-2">🥈</div><div class="lb-avatar" style="background:rgba(77,159,255,0.15);color:var(--blue);">A</div><div class="lb-name">Aryan S.</div><div><div class="lb-score">2,310</div><div class="lb-solved">38 solved</div></div></div>
+            <div class="lb-row"><div class="lb-rank rank-3">🥉</div><div class="lb-avatar" style="background:rgba(0,212,170,0.15);color:var(--green);">P</div><div class="lb-name">Priya M.</div><div><div class="lb-score">1,990</div><div class="lb-solved">33 solved</div></div></div>
+            <div class="lb-row"><div class="lb-rank rank-other">4</div><div class="lb-avatar" style="background:rgba(167,139,250,0.15);color:#a78bfa;">R</div><div class="lb-name">Rahul T.</div><div><div class="lb-score">1,750</div><div class="lb-solved">29 solved</div></div></div>
+            <div class="lb-row"><div class="lb-rank rank-other">5</div><div class="lb-avatar" style="background:rgba(255,87,87,0.15);color:var(--red);">S</div><div class="lb-name">Sneha G.</div><div><div class="lb-score">1,420</div><div class="lb-solved">24 solved</div></div></div>
+        </div>
+        <div class="lb-text-side reveal reveal-delay-1">
+            <div class="section-tag">Leaderboard</div>
+            <h2 class="section-title" style="font-size:40px;">Compete with<br>your batch</h2>
+            <p class="section-sub" style="margin-bottom:0;">Real rankings among NIET students. Every problem you solve earns points.</p>
+            <div class="rank-badges">
+                <div class="rank-badge rb-gold"><i class="fa-solid fa-crown"></i> Gold Coder</div>
+                <div class="rank-badge rb-silver"><i class="fa-solid fa-medal"></i> Silver Coder</div>
+                <div class="rank-badge rb-bronze"><i class="fa-solid fa-award"></i> Bronze Coder</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── CTA ── -->
+<section class="cta-section" id="cta-section">
+    <div class="cta-inner" id="cta-inner">
+        <h2 class="cta-title reveal">Ready to start<br>your journey?</h2>
+        <p class="cta-sub reveal">Join 1,400+ NIET students already practicing on NIETCode.</p>
+        <div class="cta-actions reveal">
+            <button onclick="guardedNav('Problems.html')" class="btn-hero-primary"><i class="fa-solid fa-rocket"></i> Start Solving Free</button>
+            <button onclick="guardedNav('Problems.html')" class="btn-hero-secondary"><i class="fa-solid fa-list"></i> Browse Problems</button>
+        </div>
+    </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+    <div class="footer-brand">NIET<span>Code</span></div>
+    <div class="footer-copy">© 2025 NIETCode. Built for NIET students.</div>
+    <div class="footer-links">
+        <button class="footer-link" onclick="guardedNav('Problems.html')">Problems</button>
+        <button class="footer-link" onclick="guardedNav('Profile.html')">Profile</button>
+        <a href="Login.html" class="footer-link" id="footer-login-link">Login</a>
+    </div>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════
+// GLOBAL STATE
+// ═══════════════════════════════════════════════════
+let currentUser  = null;
+
+
+// ─── AUTH READY PROMISE ────────────────────────────
+// Resolves the FIRST time onAuthStateChanged fires.
+// All guarded actions await this so they never act on
+// a stale null during Firebase's ~300ms cold-start.
+let _authResolve;
+const authReady = new Promise(resolve => { _authResolve = resolve; });
+
+// ═══════════════════════════════════════════════════
+// AUTH GATE
+// ═══════════════════════════════════════════════════
+window.closeGate = function () {
+    document.getElementById('auth-gate').classList.remove('show');
+};
+
+// Called by the "Sign In / Sign Up" button inside the gate modal.
+// Awaits authReady first — if user IS logged in (race condition
+// already resolved by the time they read & click the modal),
+// skips Login.html entirely and goes straight to Problems.
+// Only goes to Login.html if genuinely not authenticated.
+window.gateLogin = async function () {
+    await authReady;
+    const liveUser = (typeof firebase !== 'undefined' && firebase.apps.length)
+        ? firebase.auth().currentUser : currentUser;
+    if (liveUser) {
+        closeGate();
+        window.location.href = 'Problems.html';
+    } else {
+        window.location.href = 'Login.html';
+    }
+};
+
+// Awaits authReady before checking — never acts on stale null.
+window.guardedNav = async function (page) {
+    await authReady;
+    const liveUser = (typeof firebase !== 'undefined' && firebase.apps.length)
+        ? firebase.auth().currentUser : currentUser;
+    if (liveUser) {
+        window.location.href = page;
+    } else {
+        document.getElementById('auth-gate').classList.add('show');
+    }
+};
+
+document.getElementById('auth-gate').addEventListener('click', function (e) {
+    if (e.target === this) window.closeGate();
+});
+
+// ═══════════════════════════════════════════════════
+// NAVBAR UI + PROFILE DROPDOWN
+// ═══════════════════════════════════════════════════
+function updateNavbar(user) {
+    const navRight      = document.getElementById('nav-right');
+    const heroSecondary = document.getElementById('hero-secondary-btn');
+    const footerLogin   = document.getElementById('footer-login-link');
+
+    const ctaInner      = document.getElementById('cta-inner');
+
+    if (user) {
+        const initial = (user.displayName || user.email).charAt(0).toUpperCase();
+        const name    = user.displayName || user.email.split('@')[0];
+        const email   = user.email || '';
+
+        navRight.innerHTML = `
+            <div class="profile-wrap" id="profile-wrap">
+                <div class="user-pill" onclick="toggleProfileDropdown()">
+                    <div class="user-avatar">${initial}</div>
+                    <span class="user-name">${name}</span>
+                    <i class="fa-solid fa-chevron-down pill-chevron"></i>
+                </div>
+                <div class="profile-dropdown">
+                    <div class="dd-header">
+                        <div class="dd-avatar">${initial}</div>
+                        <div class="dd-info">
+                            <div class="dd-name">${name}</div>
+                            <div class="dd-email">${email}</div>
+                        </div>
+                    </div>
+                    <div class="dd-menu">
+                        <a href="Profile.html" class="dd-item"><i class="fa-regular fa-user"></i> My Profile</a>
+                        <a href="Problems.html" class="dd-item"><i class="fa-solid fa-code"></i> My Submissions</a>
+                        <div class="dd-divider"></div>
+                        <button class="dd-item" onclick="handleChangePassword()"><i class="fa-solid fa-key"></i> Change Password</button>
+                        <a href="Profile.html" class="dd-item"><i class="fa-solid fa-gear"></i> Settings</a>
+                        <div class="dd-divider"></div>
+                        <button class="dd-item dd-danger" onclick="window.doSignOut()"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
+                    </div>
+                </div>
+            </div>`;
+
+        if (heroSecondary) {
+            heroSecondary.innerHTML = '<i class="fa-solid fa-trophy"></i> View Leaderboard';
+            heroSecondary.href = 'Profile.html';
+        }
+        if (footerLogin) footerLogin.style.display = 'none';
+
+
+        // Transform bottom CTA for logged-in users
+        if (ctaInner) {
+            ctaInner.innerHTML = `
+                <h2 class="cta-title">Keep building<br>your skills, ${name.split(' ')[0]}!</h2>
+                <p class="cta-sub">You're on a roll. Jump back into solving or check your progress.</p>
+                <div class="cta-actions">
+                    <a href="Problems.html" class="btn-hero-primary"><i class="fa-solid fa-code"></i> Continue Solving</a>
+                    <a href="Profile.html" class="btn-hero-secondary"><i class="fa-solid fa-chart-line"></i> View My Stats</a>
+                </div>`;
+        }
+
+    } else {
+        navRight.innerHTML = `
+            <a href="Login.html" class="btn-ghost">Log in</a>
+            <a href="Login.html" class="btn-cta">Get Started</a>`;
+
+        if (heroSecondary) {
+            heroSecondary.innerHTML = '<i class="fa-regular fa-user"></i> Create Account';
+            heroSecondary.href = 'Login.html';
+        }
+        if (footerLogin) footerLogin.style.display = '';
+
+    }
+}
+
+// Toggle the profile dropdown
+function toggleProfileDropdown() {
+    const wrap = document.getElementById('profile-wrap');
+    if (wrap) wrap.classList.toggle('open');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+    const wrap = document.getElementById('profile-wrap');
+    if (wrap && !wrap.contains(e.target)) {
+        wrap.classList.remove('open');
+    }
+});
+
+// Change password via Firebase
+async function handleChangePassword() {
+    const wrap = document.getElementById('profile-wrap');
+    if (wrap) wrap.classList.remove('open');
+    if (!currentUser || !currentUser.email) { alert('No email found.'); return; }
+    try {
+        await firebase.auth().sendPasswordResetEmail(currentUser.email);
+        alert('Password reset email sent to ' + currentUser.email + '. Check your inbox!');
+    } catch(err) {
+        alert('Error: ' + err.message);
+    }
+}
+
+// ═══════════════════════════════════════════════════
+// FIREBASE
+// ═══════════════════════════════════════════════════
+function initFirebase() {
+    if (typeof firebase === 'undefined' || !firebase.initializeApp) {
+        console.warn('Firebase SDK not available yet.');
+        return false;
+    }
+
+    try {
+        // Prevent double-init
+        if (!firebase.apps.length) {
+            const firebaseConfig = {
+                apiKey:            "AIzaSyBvS473QS25-jvd_zm4VmOA5UX4yIbvytU",
+                authDomain:        "niet-code.firebaseapp.com",
+                projectId:         "niet-code",
+                storageBucket:     "niet-code.firebasestorage.app",
+                messagingSenderId: "331564337114",
+                appId:             "1:331564337114:web:56c072292a02d8fc4422e3"
+            };
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const auth = firebase.auth();
+
+        auth.onAuthStateChanged(user => {
+            currentUser = user;
+            updateNavbar(user);
+            _authResolve();
+            if (user) closeGate();
+        });
+
+        window.addEventListener('focus', () => {
+            const liveUser = firebase.auth().currentUser;
+            if (liveUser && !currentUser) {
+                currentUser = liveUser;
+                updateNavbar(liveUser);
+                closeGate();
+            } else if (!liveUser && currentUser) {
+                currentUser = null;
+                updateNavbar(null);
+            }
+        });
+
+        window.doSignOut = function () { auth.signOut(); };
+        return true;
+
+    } catch (err) {
+        console.warn('Firebase init failed:', err.message);
+        return false;
+    }
+}
+
+// Try immediately; if SDK hasn't loaded yet, retry with delay
+if (!initFirebase()) {
+    // Retry every 500ms, up to 3 seconds
+    let attempts = 0;
+    const retryInterval = setInterval(() => {
+        attempts++;
+        if (initFirebase()) {
+            clearInterval(retryInterval);
+            console.log('Firebase initialized on retry #' + attempts);
+        } else if (attempts >= 6) {
+            clearInterval(retryInterval);
+            console.warn('Firebase SDK failed to load after 3s. Running in guest mode.');
+            _authResolve();
+            updateNavbar(null);
+            window.doSignOut = function () { window.location.href = 'Login.html'; };
+        }
+    }, 500);
+}
+
+
+// ═══════════════════════════════════════════════════
+// PAGE UTILITIES
+// ═══════════════════════════════════════════════════
+const revObs = new IntersectionObserver(entries => {
+    entries.forEach(x => { if (x.isIntersecting) { x.target.classList.add('visible'); revObs.unobserve(x.target); } });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => revObs.observe(el));
+
+const cntObs = new IntersectionObserver(entries => {
+    entries.forEach(x => {
+        if (x.isIntersecting) {
+            const t = parseInt(x.target.dataset.target);
+            const s = (t === 95) ? '%' : (t === 1400 || t === 120) ? '+' : '';
+            let start = 0;
+            const tick = ts => { if (!start) start = ts; const p = Math.min((ts-start)/1800,1); x.target.textContent = Math.floor((1-Math.pow(1-p,3))*t)+s; if(p<1) requestAnimationFrame(tick); };
+            requestAnimationFrame(tick); cntObs.unobserve(x.target);
+        }
+    });
+}, { threshold: 0.5 });
+document.querySelectorAll('[data-target]').forEach(el => cntObs.observe(el));
+
+window.addEventListener('scroll', () => {
+    const nb = document.getElementById('navbar');
+    if (nb) nb.style.borderBottomColor = window.scrollY > 60 ? 'rgba(30,45,64,0.9)' : 'var(--border)';
+});
+
+
+</script>
+</body>
+</html>
