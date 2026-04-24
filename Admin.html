@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIETCode | Admin Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<style>
+:root{--orange:#ffa116;--orange-glow:rgba(255,161,22,0.25);--bg:#080b10;--bg2:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;--border2:#1e2d40;--text:#e6edf3;--text-muted:#8b949e;--text-soft:#9ab0cc;--blue:#58a6ff;--green:#3fb950;--red:#f85149;--purple:#d2a8ff;--yellow:#ffa657;--cyan:#79c0ff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.navbar{position:sticky;top:0;z-index:100;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;background:rgba(8,11,16,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+.nav-brand{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--orange);text-decoration:none}.nav-brand span{color:var(--text)}
+.nav-links{display:flex;gap:30px;align-items:center}
+.nav-link{text-decoration:none;color:var(--text-muted);font-size:14px;font-weight:500;transition:color .2s;background:none;border:none;cursor:pointer;font-family:inherit;padding:0}.nav-link:hover,.nav-link.active{color:var(--text)}
+.nav-right{display:flex;gap:12px;align-items:center}
+.admin-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:8px;font-size:11px;font-weight:700;background:rgba(255,161,22,0.15);color:var(--orange)}
+
+.page-wrap{max-width:1200px;margin:0 auto;padding:32px 32px 60px}
+.page-header{margin-bottom:32px}
+.page-header h1{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.page-header h1 i{color:var(--orange)}
+.page-header p{color:var(--text-muted);font-size:14px}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;transition:.2s}
+.stat-box:hover{border-color:var(--border2)}
+.stat-num{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;line-height:1}
+.stat-label{font-size:12px;color:var(--text-muted);margin-top:6px}
+.sn-pending{color:var(--purple)}.sn-approved{color:var(--green)}.sn-rejected{color:var(--red)}.sn-total{color:var(--blue)}
+
+.tab-bar{display:flex;gap:6px;margin-bottom:24px}
+.tab-btn{padding:8px 20px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s}
+.tab-btn:hover{border-color:var(--text-soft);color:var(--text)}
+.tab-btn.active{background:var(--orange);color:#000;border-color:var(--orange)}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 22px;margin-bottom:12px;transition:.15s}
+.card:hover{border-color:var(--border2);background:var(--surface2)}
+.card-top{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.card-title{font-weight:700;font-size:16px;flex:1}
+.card-meta{display:flex;gap:14px;font-size:12px;color:var(--text-muted);flex-wrap:wrap;align-items:center}
+.diff-tag{font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px}
+.diff-easy{color:var(--green);background:rgba(63,185,80,.1)}.diff-medium{color:var(--yellow);background:rgba(255,166,87,.1)}.diff-hard{color:var(--red);background:rgba(248,81,73,.1)}
+.status-badge{padding:4px 12px;border-radius:12px;font-size:11px;font-weight:700}
+.sb-pending{background:rgba(210,168,255,0.1);color:var(--purple)}.sb-approved{background:rgba(63,185,80,0.1);color:var(--green)}.sb-rejected{background:rgba(248,81,73,0.1);color:var(--red)}
+
+.card-actions{display:flex;gap:8px;margin-top:12px}
+.btn-approve{padding:7px 18px;border-radius:8px;border:none;background:var(--green);color:#000;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;display:flex;align-items:center;gap:6px}.btn-approve:hover{filter:brightness(1.1)}
+.btn-reject{padding:7px 18px;border-radius:8px;border:1px solid var(--red);background:transparent;color:var(--red);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;display:flex;align-items:center;gap:6px}.btn-reject:hover{background:var(--red);color:#000}
+.btn-preview{padding:7px 18px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-soft);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s;display:flex;align-items:center;gap:6px}.btn-preview:hover{border-color:var(--cyan);color:var(--cyan)}
+.btn-approve:disabled,.btn-reject:disabled{opacity:.4;cursor:not-allowed}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-muted)}
+.empty-state i{font-size:40px;display:block;margin-bottom:16px;color:var(--border)}
+.empty-state p{font-size:15px}
+
+.reject-reason{font-size:12px;color:var(--red);font-style:italic;margin-top:6px}
+.loading-state{text-align:center;padding:40px;color:var(--text-muted);font-size:14px}
+
+/* Preview Modal */
+.modal-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.7);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:.3s}.modal-overlay.active{opacity:1;visibility:visible}
+.modal-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;width:90%;max-width:700px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 25px 80px rgba(0,0,0,0.6);transform:scale(.92) translateY(20px);transition:transform .35s cubic-bezier(.16,1,.3,1)}.modal-overlay.active .modal-box{transform:scale(1) translateY(0)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border)}
+.modal-header h2{font-family:'Syne',sans-serif;font-size:18px;font-weight:800}
+.modal-close{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}.modal-close:hover{border-color:var(--red);color:var(--red)}
+.modal-body{flex:1;overflow-y:auto;padding:20px 24px;font-size:14px;line-height:1.8;color:var(--text-soft)}
+.modal-body h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text);margin:16px 0 8px}
+.modal-body h3:first-child{margin-top:0}
+.modal-body pre{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-family:'JetBrains Mono',monospace;font-size:12px;overflow-x:auto;margin:8px 0}
+.modal-body .example-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin:8px 0;font-family:monospace;font-size:13px}
+.ex-label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
+
+/* Reject Modal */
+.reject-modal-body{padding:20px 24px}
+.reject-modal-body textarea{width:100%;height:100px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:inherit;font-size:14px;resize:vertical;margin-top:10px}
+.reject-modal-body textarea:focus{outline:none;border-color:var(--orange)}
+.reject-modal-footer{display:flex;gap:10px;justify-content:flex-end;padding:16px 24px;border-top:1px solid var(--border)}
+.btn-cancel{padding:8px 20px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:.2s}.btn-cancel:hover{border-color:var(--text-soft);color:var(--text)}
+
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--text-muted);border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:768px){.navbar{padding:0 16px}.page-wrap{padding:20px 16px}.stats-row{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<nav class="navbar">
+    <a href="Explore.html" class="nav-brand">NIET<span>Code</span></a>
+    <div class="nav-links">
+        <a href="Explore.html" class="nav-link">Explore</a>
+        <a href="Problems.html" class="nav-link">Problems</a>
+        <a href="Placements.html" class="nav-link">Placements</a>
+        <a href="Admin.html" class="nav-link active">Admin</a>
+    </div>
+    <div class="nav-right"><span class="admin-badge"><i class="fa-solid fa-shield-halved"></i> Admin Panel</span></div>
+</nav>
+
+<div class="page-wrap">
+    <div class="page-header">
+        <h1><i class="fa-solid fa-shield-halved"></i> Admin Dashboard</h1>
+        <p>Review and manage CSV-uploaded problem submissions</p>
+    </div>
+    <div class="stats-row" id="stats-row">
+        <div class="stat-box"><div class="stat-num sn-pending" id="s-pending">-</div><div class="stat-label">Pending</div></div>
+        <div class="stat-box"><div class="stat-num sn-approved" id="s-approved">-</div><div class="stat-label">Approved</div></div>
+        <div class="stat-box"><div class="stat-num sn-rejected" id="s-rejected">-</div><div class="stat-label">Rejected</div></div>
+        <div class="stat-box"><div class="stat-num sn-total" id="s-total">-</div><div class="stat-label">Total</div></div>
+    </div>
+    <div class="tab-bar" id="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('pending')">Pending</button>
+        <button class="tab-btn" onclick="switchTab('approved')">Approved</button>
+        <button class="tab-btn" onclick="switchTab('rejected')">Rejected</button>
+        <button class="tab-btn" onclick="switchTab('all')">All</button>
+    </div>
+    <div id="cards-area"><div class="loading-state"><div class="spinner"></div> Loading submissions...</div></div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal-overlay" id="preview-modal">
+    <div class="modal-box">
+        <div class="modal-header"><h2 id="preview-title">Problem Preview</h2><button class="modal-close" onclick="closePreview()"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="modal-body" id="preview-body"></div>
+    </div>
+</div>
+
+<!-- Reject Reason Modal -->
+<div class="modal-overlay" id="reject-modal">
+    <div class="modal-box" style="max-width:480px">
+        <div class="modal-header"><h2>Reject Submission</h2><button class="modal-close" onclick="closeReject()"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="reject-modal-body">
+            <p style="color:var(--text-soft);font-size:14px">Rejecting: <strong id="reject-title"></strong></p>
+            <textarea id="reject-reason" placeholder="Optional: Add a reason for rejection..."></textarea>
+        </div>
+        <div class="reject-modal-footer">
+            <button class="btn-cancel" onclick="closeReject()">Cancel</button>
+            <button class="btn-reject" id="reject-confirm-btn" onclick="confirmReject()"><i class="fa-solid fa-circle-xmark"></i> Reject</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const ADMIN_EMAILS=['kartikkesarwani149@gmail.com'];
+let db,currentUser,allSubmissions=[],activeTab='pending',rejectDocId=null;
+
+function initFirebase(){
+    if(typeof firebase==='undefined')return false;
+    try{
+        if(!firebase.apps.length) firebase.initializeApp({apiKey:"AIzaSyBvS473QS25-jvd_zm4VmOA5UX4yIbvytU",authDomain:"niet-code.firebaseapp.com",projectId:"niet-code",storageBucket:"niet-code.firebasestorage.app",messagingSenderId:"331564337114",appId:"1:331564337114:web:56c072292a02d8fc4422e3"});
+        db=firebase.firestore();
+        firebase.auth().onAuthStateChanged(async user=>{
+            currentUser=user;
+            if(!user){window.location.href='Login.html';return;}
+            if(!ADMIN_EMAILS.includes(user.email.toLowerCase())){alert('Access denied. Admin only.');window.location.href='Problems.html';return;}
+            await loadAllSubmissions();
+        });
+        return true;
+    }catch(e){return false}
+}
+if(!initFirebase()){let a=0;const iv=setInterval(()=>{a++;if(initFirebase()||a>=6)clearInterval(iv)},500)}
+
+async function loadAllSubmissions(){
+    try{
+        const snap=await db.collection('pending_problems').get();
+        allSubmissions=[];
+        snap.forEach(doc=>{allSubmissions.push({_docId:doc.id,...doc.data()})});
+        allSubmissions.sort((a,b)=>{const ta=a.submittedAt?.toMillis?.()||0,tb=b.submittedAt?.toMillis?.()||0;return tb-ta});
+        updateStats();renderCards();
+    }catch(e){document.getElementById('cards-area').innerHTML='<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i><p>Error loading: '+e.message+'</p></div>'}
+}
+
+function updateStats(){
+    const p=allSubmissions.filter(s=>s.status==='pending').length;
+    const a=allSubmissions.filter(s=>s.status==='approved').length;
+    const r=allSubmissions.filter(s=>s.status==='rejected').length;
+    document.getElementById('s-pending').textContent=p;
+    document.getElementById('s-approved').textContent=a;
+    document.getElementById('s-rejected').textContent=r;
+    document.getElementById('s-total').textContent=allSubmissions.length;
+}
+
+function switchTab(tab){
+    activeTab=tab;
+    document.querySelectorAll('.tab-btn').forEach((b,i)=>{b.classList.toggle('active',['pending','approved','rejected','all'][i]===tab)});
+    renderCards();
+}
+
+function renderCards(){
+    const area=document.getElementById('cards-area');
+    const filtered=activeTab==='all'?allSubmissions:allSubmissions.filter(s=>s.status===activeTab);
+    if(filtered.length===0){area.innerHTML='<div class="empty-state"><i class="fa-regular fa-folder-open"></i><p>No '+activeTab+' submissions</p></div>';return}
+    area.innerHTML=filtered.map(s=>{
+        const dc='diff-'+(s.diff||'easy').toLowerCase();
+        const sc=s.status==='pending'?'sb-pending':s.status==='approved'?'sb-approved':'sb-rejected';
+        const date=s.submittedAt?.toDate?s.submittedAt.toDate().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'N/A';
+        const actions=s.status==='pending'?`<div class="card-actions"><button class="btn-approve" onclick="approveDoc('${s._docId}')"><i class="fa-solid fa-circle-check"></i> Approve</button><button class="btn-reject" onclick="openReject('${s._docId}','${esc(s.title)}')"><i class="fa-solid fa-circle-xmark"></i> Reject</button><button class="btn-preview" onclick="openPreview('${s._docId}')"><i class="fa-solid fa-eye"></i> Preview</button></div>`:`<div class="card-actions"><button class="btn-preview" onclick="openPreview('${s._docId}')"><i class="fa-solid fa-eye"></i> Preview</button></div>`;
+        const rr=s.rejectReason?`<div class="reject-reason"><i class="fa-solid fa-quote-left"></i> ${esc(s.rejectReason)}</div>`:'';
+        return`<div class="card"><div class="card-top"><div class="card-title">${esc(s.title)}</div><span class="status-badge ${sc}">${s.status}</span></div><div class="card-meta"><span class="diff-tag ${dc}">${s.diff}</span><span><i class="fa-solid fa-tag"></i> ${esc(s.topic)}</span><span><i class="fa-regular fa-user"></i> ${esc(s.submittedByName||s.submittedByEmail||'Unknown')}</span><span><i class="fa-regular fa-calendar"></i> ${date}</span><span>${s.allTests?.length||0} tests</span></div>${rr}${actions}</div>`
+    }).join('');
+}
+
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+async function approveDoc(docId){
+    const s=allSubmissions.find(x=>x._docId===docId);if(!s)return;
+    try{
+        // Add to approved_problems
+        await db.collection('approved_problems').doc(s.id).set({
+            id:s.id,topic:s.topic,title:s.title,diff:s.diff,desc:s.desc,
+            constraints:s.constraints,examples:s.examples,allTests:s.allTests,
+            _inputType:s._inputType||'arr',approvedBy:currentUser.email,
+            approvedAt:firebase.firestore.FieldValue.serverTimestamp()
+        });
+        // Update pending doc status
+        await db.collection('pending_problems').doc(docId).update({
+            status:'approved',reviewedBy:currentUser.email,
+            reviewedAt:firebase.firestore.FieldValue.serverTimestamp()
+        });
+        s.status='approved';updateStats();renderCards();
+        showToast('Problem approved and published!','var(--green)');
+    }catch(e){alert('Error: '+e.message)}
+}
+
+function openReject(docId,title){
+    rejectDocId=docId;
+    document.getElementById('reject-title').textContent=title;
+    document.getElementById('reject-reason').value='';
+    document.getElementById('reject-modal').classList.add('active');
+}
+function closeReject(){document.getElementById('reject-modal').classList.remove('active');rejectDocId=null}
+
+async function confirmReject(){
+    if(!rejectDocId)return;
+    const reason=document.getElementById('reject-reason').value.trim();
+    try{
+        await db.collection('pending_problems').doc(rejectDocId).update({
+            status:'rejected',rejectReason:reason,reviewedBy:currentUser.email,
+            reviewedAt:firebase.firestore.FieldValue.serverTimestamp()
+        });
+        const s=allSubmissions.find(x=>x._docId===rejectDocId);
+        if(s){s.status='rejected';s.rejectReason=reason}
+        closeReject();updateStats();renderCards();
+        showToast('Submission rejected','var(--red)');
+    }catch(e){alert('Error: '+e.message)}
+}
+
+function openPreview(docId){
+    const s=allSubmissions.find(x=>x._docId===docId);if(!s)return;
+    document.getElementById('preview-title').textContent=s.title;
+    let html=`<h3>Description</h3><p>${esc(s.desc)}</p>`;
+    html+=`<h3>Constraints</h3><p>${esc(s.constraints)}</p>`;
+    html+=`<h3>Examples</h3>`;
+    (s.examples||[]).forEach((ex,i)=>{html+=`<div class="example-box"><div class="ex-label">Example ${i+1}</div><div><strong>Input:</strong> ${esc(ex.input)}</div><div><strong>Output:</strong> ${esc(ex.output)}</div></div>`});
+    html+=`<h3>Test Cases (${(s.allTests||[]).length})</h3>`;
+    (s.allTests||[]).forEach((t,i)=>{html+=`<div class="example-box"><div class="ex-label">Test ${i+1}</div><div><strong>Input:</strong> ${esc(t.input)}</div><div><strong>Output:</strong> ${esc(t.output)}</div></div>`});
+    html+=`<h3>Metadata</h3><p>Topic: ${esc(s.topic)} • Difficulty: ${s.diff} • Input Type: ${s._inputType||'arr'}</p>`;
+    document.getElementById('preview-body').innerHTML=html;
+    document.getElementById('preview-modal').classList.add('active');
+}
+function closePreview(){document.getElementById('preview-modal').classList.remove('active')}
+
+// Close modals on overlay click
+document.getElementById('preview-modal').addEventListener('click',function(e){if(e.target===this)closePreview()});
+document.getElementById('reject-modal').addEventListener('click',function(e){if(e.target===this)closeReject()});
+
+function showToast(msg,color){
+    const t=document.createElement('div');
+    t.style.cssText=`position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);padding:14px 28px;border-radius:14px;background:${color}22;border:1px solid ${color}44;color:${color};font-size:14px;font-weight:700;font-family:DM Sans,sans-serif;z-index:9999;backdrop-filter:blur(12px);display:flex;align-items:center;gap:10px;box-shadow:0 10px 40px rgba(0,0,0,0.4);opacity:0;transition:all .4s cubic-bezier(0.16,1,0.3,1)`;
+    t.innerHTML='<i class="fa-solid fa-circle-check"></i>'+msg;
+    document.body.appendChild(t);
+    requestAnimationFrame(()=>{t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)'});
+    setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(20px)';setTimeout(()=>t.remove(),400)},3000);
+}
+</script>
+</body>
+</html>

@@ -209,12 +209,31 @@ async function populateProfile(user){
             if(doc.exists){
                 const data=doc.data();
                 if(data.stats) stats={...stats,...data.stats};
-                // Calculate streak from lastActive
                 if(data.lastActive){
                     const last=data.lastActive.toDate();
                     const diffDays=Math.floor((Date.now()-last.getTime())/(1000*60*60*24));
                     stats.streak=diffDays<=1?(stats.streak||1):0;
                 }
+            }
+            // ── Real rank: query all users, sort by score, find position ──
+            try{
+                const allSnap=await db.collection('users').get();
+                const allUsers=[];
+                allSnap.forEach(d=>{
+                    const s=d.data().stats||{};
+                    const score=(s.easy||0)*10+(s.medium||0)*25+(s.hard||0)*50;
+                    const total=s.total||0;
+                    allUsers.push({uid:d.id,score,total});
+                });
+                allUsers.sort((a,b)=>b.score-a.score||b.total-a.total);
+                const myIdx=allUsers.findIndex(u=>u.uid===user.uid);
+                if(myIdx>=0 && stats.total>0){
+                    document.getElementById('p-rank').textContent='Rank #'+(myIdx+1)+' of '+allUsers.filter(u=>u.total>0).length;
+                } else {
+                    document.getElementById('p-rank').textContent='Unranked';
+                }
+            }catch(re){console.warn('Rank calc:',re.message);
+                document.getElementById('p-rank').textContent=stats.total>0?'Ranked':'Unranked';
             }
         }
     }catch(e){console.warn('Load stats:',e.message)}
@@ -223,7 +242,6 @@ async function populateProfile(user){
     document.getElementById('s-medium').textContent=stats.medium;
     document.getElementById('s-hard').textContent=stats.hard;
     document.getElementById('p-streak').textContent=(stats.streak||0)+' day streak';
-    document.getElementById('p-rank').textContent=stats.total>0?'Rank #'+Math.max(1,100-stats.total*5):'Unranked';
     // Load default tab
     switchTab('info',document.querySelector('.tab-btn'));
 }

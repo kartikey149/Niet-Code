@@ -1,340 +1,1708 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NIETCode | Problems</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
     <style>
-:root{--orange:#ffa116;--orange-glow:rgba(255,161,22,0.25);--bg:#080b10;--bg2:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;--border2:#1e2d40;--text:#e6edf3;--text-muted:#8b949e;--text-soft:#9ab0cc;--blue:#58a6ff;--green:#3fb950;--red:#f85149;--purple:#d2a8ff;--yellow:#ffa657;--cyan:#79c0ff;--easy:#3fb950;--medium:#ffa657;--hard:#f85149}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-.navbar{position:sticky;top:0;z-index:100;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;background:rgba(8,11,16,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
-.nav-brand{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--orange);text-decoration:none}.nav-brand span{color:var(--text)}
-.nav-links{display:flex;gap:30px;align-items:center}
-.nav-link{text-decoration:none;color:var(--text-muted);font-size:14px;font-weight:500;transition:color .2s;background:none;border:none;cursor:pointer;font-family:inherit;padding:0}.nav-link:hover,.nav-link.active{color:var(--text)}
-.nav-right{display:flex;gap:12px;align-items:center;min-width:180px;justify-content:flex-end}
-.btn-ghost{padding:8px 18px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--text-soft);font-size:13px;font-weight:500;cursor:pointer;text-decoration:none;transition:.2s;font-family:inherit}.btn-ghost:hover{border-color:var(--orange);color:var(--orange)}
-.btn-cta{padding:8px 20px;border-radius:8px;border:none;background:var(--orange);color:#000;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:.2s;font-family:inherit}.btn-cta:hover{filter:brightness(1.1)}
-.profile-wrap{position:relative}.user-pill{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:5px 14px 5px 6px;cursor:pointer;transition:.2s;user-select:none}.user-pill:hover{border-color:var(--orange)}
-.user-avatar{width:32px;height:32px;border-radius:8px;background:var(--orange);color:#000;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;font-family:'Syne';flex-shrink:0}
-.user-name{font-size:13px;font-weight:600;color:var(--text);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pill-chevron{color:var(--text-muted);font-size:10px;transition:transform .2s}.profile-wrap.open .pill-chevron{transform:rotate(180deg)}
-.profile-dropdown{position:absolute;top:calc(100% + 8px);right:0;width:280px;background:var(--surface);border:1px solid var(--border2);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5);opacity:0;visibility:hidden;transform:translateY(-8px);transition:.2s;z-index:200;overflow:hidden}.profile-wrap.open .profile-dropdown{opacity:1;visibility:visible;transform:translateY(0)}
-.dd-header{padding:18px 18px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
-.dd-avatar{width:44px;height:44px;border-radius:12px;background:var(--orange);color:#000;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;font-family:'Syne';flex-shrink:0}
-.dd-info{flex:1;min-width:0}.dd-name{font-size:15px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dd-email{font-size:12px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dd-menu{padding:6px 0}.dd-item{display:flex;align-items:center;gap:12px;padding:11px 18px;font-size:14px;font-weight:500;color:var(--text-soft);cursor:pointer;transition:.15s;border:none;background:none;width:100%;text-align:left;font-family:inherit;text-decoration:none}.dd-item:hover{background:var(--surface2);color:var(--text)}.dd-item i{width:18px;text-align:center;font-size:14px;color:var(--text-muted)}.dd-item:hover i{color:var(--orange)}
-.dd-divider{height:1px;background:var(--border);margin:4px 0}.dd-item.dd-danger{color:var(--red)}.dd-item.dd-danger i{color:var(--red)}.dd-item.dd-danger:hover{background:rgba(248,81,73,.08)}
-.list-view{max-width:1100px;margin:0 auto;padding:28px 32px}
-.list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
-.list-header h1{font-family:'Syne';font-size:26px;font-weight:800}
-.topic-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}
-.topic-chip{padding:7px 16px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;font-family:inherit}.topic-chip:hover{border-color:var(--text-soft);color:var(--text)}.topic-chip.active{background:var(--orange);color:#000;border-color:var(--orange)}
-.prob-table{width:100%;border-collapse:collapse}
-.prob-table thead th{text-align:left;padding:10px 14px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);border-bottom:1px solid var(--border)}
-.prob-table tbody tr{border-bottom:1px solid rgba(48,54,61,.4);transition:background .1s}.prob-table tbody tr:hover{background:var(--surface)}
-.prob-table td{padding:14px;font-size:14px}
-.td-status{width:40px;text-align:center}
-.td-title{font-weight:600;cursor:pointer;transition:color .15s}.td-title:hover{color:var(--orange)}
-.diff-tag{font-size:12px;font-weight:700;padding:3px 10px;border-radius:12px}
-.diff-easy{color:var(--easy);background:rgba(63,185,80,.1)}.diff-medium{color:var(--medium);background:rgba(255,166,87,.1)}.diff-hard{color:var(--hard);background:rgba(248,81,73,.1)}
-.solve-btn{padding:6px 16px;border-radius:8px;border:1px solid var(--blue);background:transparent;color:var(--blue);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;font-family:inherit}.solve-btn:hover{background:var(--blue);color:#000}
-.editor-view{display:none;height:calc(100vh - 64px)}
-.ev-split{display:flex;height:100%}
-.ev-left{width:45%;min-width:340px;border-right:1px solid var(--border);overflow-y:auto;background:var(--bg)}
-.ev-right{flex:1;display:flex;flex-direction:column;background:var(--bg2)}
-.ev-back{display:flex;align-items:center;gap:8px;padding:12px 20px;font-size:13px;font-weight:600;color:var(--text-muted);cursor:pointer;border-bottom:1px solid var(--border);transition:.15s;background:none;border-left:none;border-right:none;border-top:none;width:100%;text-align:left;font-family:inherit}.ev-back:hover{color:var(--text);background:var(--surface)}
-.ev-desc{padding:24px 24px 16px}
-.ev-title{font-family:'Syne';font-size:22px;font-weight:800;margin-bottom:6px}
-.ev-diff{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;margin-bottom:16px}
-.ev-section{margin-bottom:18px}.ev-section h4{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:8px}
-.ev-section p{font-size:14px;line-height:1.8;color:var(--text-soft)}
-.ev-example{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:10px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7}
-.ev-example .ex-label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
-.ev-example .ex-val{color:var(--cyan)}
-.ed-topbar{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--border);background:var(--surface)}
-.ed-lang select{background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:13px;font-family:'DM Sans';cursor:pointer}
-.ed-actions{display:flex;gap:8px}
-.btn-run{padding:7px 18px;border-radius:8px;border:1px solid var(--green);background:transparent;color:var(--green);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;display:flex;align-items:center;gap:6px}.btn-run:hover{background:var(--green);color:#000}
-.btn-submit{padding:7px 18px;border-radius:8px;border:none;background:var(--orange);color:#000;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;display:flex;align-items:center;gap:6px}.btn-submit:hover{filter:brightness(1.1)}
-.btn-run:disabled,.btn-submit:disabled{opacity:.5;cursor:not-allowed}
-.ed-monaco{flex:1;min-height:0}
-.ed-results{border-top:1px solid var(--border);background:var(--surface);max-height:240px;overflow-y:auto;padding:14px 18px}
-.res-title{font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
-.tc-row{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:8px;margin-bottom:6px;font-size:13px;font-family:'JetBrains Mono',monospace}
-.tc-pass{background:rgba(63,185,80,.08);border:1px solid rgba(63,185,80,.2)}.tc-pass .tc-icon{color:var(--green)}
-.tc-fail{background:rgba(248,81,73,.08);border:1px solid rgba(248,81,73,.2)}.tc-fail .tc-icon{color:var(--red)}
-.tc-pending{background:var(--bg);border:1px solid var(--border)}.tc-pending .tc-icon{color:var(--text-muted)}
-.tc-info{flex:1;min-width:0}.tc-info span{display:block;font-size:11px;color:var(--text-muted)}
-.res-verdict{text-align:center;padding:16px;font-family:'Syne';font-size:20px;font-weight:800}
-.verdict-ac{color:var(--green)}.verdict-wa{color:var(--red)}
-.res-idle{color:var(--text-muted);font-size:14px;text-align:center;padding:20px}
-.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--text-muted);border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:768px){.navbar{padding:0 16px}.list-view{padding:20px 16px}.ev-split{flex-direction:column}.ev-left{width:100%;max-height:40vh;border-right:none;border-bottom:1px solid var(--border)}.ev-right{flex:1}}
+        :root {
+            --orange: #ffa116;
+            --orange-glow: rgba(255, 161, 22, 0.25);
+            --bg: #080b10;
+            --bg2: #0d1117;
+            --surface: #161b22;
+            --surface2: #21262d;
+            --border: #30363d;
+            --border2: #1e2d40;
+            --text: #e6edf3;
+            --text-muted: #8b949e;
+            --text-soft: #9ab0cc;
+            --blue: #58a6ff;
+            --green: #3fb950;
+            --red: #f85149;
+            --purple: #d2a8ff;
+            --yellow: #ffa657;
+            --cyan: #79c0ff;
+            --easy: #3fb950;
+            --medium: #ffa657;
+            --hard: #f85149
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh
+        }
+
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 48px;
+            background: rgba(8, 11, 16, 0.92);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border)
+        }
+
+        .nav-brand {
+            font-family: 'Syne', sans-serif;
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--orange);
+            text-decoration: none
+        }
+
+        .nav-brand span {
+            color: var(--text)
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
+            transition: color .2s;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            padding: 0
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--text)
+        }
+
+        .nav-right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            min-width: 180px;
+            justify-content: flex-end
+        }
+
+        .btn-ghost {
+            padding: 8px 18px;
+            border-radius: 8px;
+            border: 1px solid var(--border2);
+            background: transparent;
+            color: var(--text-soft);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: .2s;
+            font-family: inherit
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--orange);
+            color: var(--orange)
+        }
+
+        .btn-cta {
+            padding: 8px 20px;
+            border-radius: 8px;
+            border: none;
+            background: var(--orange);
+            color: #000;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: .2s;
+            font-family: inherit
+        }
+
+        .btn-cta:hover {
+            filter: brightness(1.1)
+        }
+
+        .profile-wrap {
+            position: relative
+        }
+
+        .user-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--surface);
+            border: 1px solid var(--border2);
+            border-radius: 10px;
+            padding: 5px 14px 5px 6px;
+            cursor: pointer;
+            transition: .2s;
+            user-select: none
+        }
+
+        .user-pill:hover {
+            border-color: var(--orange)
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: var(--orange);
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+            font-family: 'Syne';
+            flex-shrink: 0
+        }
+
+        .user-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            max-width: 130px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .pill-chevron {
+            color: var(--text-muted);
+            font-size: 10px;
+            transition: transform .2s
+        }
+
+        .profile-wrap.open .pill-chevron {
+            transform: rotate(180deg)
+        }
+
+        .profile-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            width: 280px;
+            background: var(--surface);
+            border: 1px solid var(--border2);
+            border-radius: 14px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .5);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px);
+            transition: .2s;
+            z-index: 200;
+            overflow: hidden
+        }
+
+        .profile-wrap.open .profile-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0)
+        }
+
+        .dd-header {
+            padding: 18px 18px 14px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px
+        }
+
+        .dd-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: var(--orange);
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 18px;
+            font-family: 'Syne';
+            flex-shrink: 0
+        }
+
+        .dd-info {
+            flex: 1;
+            min-width: 0
+        }
+
+        .dd-name {
+            font-size: 15px;
+            font-weight: 700;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .dd-email {
+            font-size: 12px;
+            color: var(--text-muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .dd-menu {
+            padding: 6px 0
+        }
+
+        .dd-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 18px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-soft);
+            cursor: pointer;
+            transition: .15s;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+            text-decoration: none
+        }
+
+        .dd-item:hover {
+            background: var(--surface2);
+            color: var(--text)
+        }
+
+        .dd-item i {
+            width: 18px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-muted)
+        }
+
+        .dd-item:hover i {
+            color: var(--orange)
+        }
+
+        .dd-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0
+        }
+
+        .dd-item.dd-danger {
+            color: var(--red)
+        }
+
+        .dd-item.dd-danger i {
+            color: var(--red)
+        }
+
+        .dd-item.dd-danger:hover {
+            background: rgba(248, 81, 73, .08)
+        }
+
+        .list-view {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 28px 32px
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px
+        }
+
+        .list-header h1 {
+            font-family: 'Syne';
+            font-size: 26px;
+            font-weight: 800
+        }
+
+        .topic-bar {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 20px
+        }
+
+        .topic-chip {
+            padding: 7px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: .15s;
+            font-family: inherit
+        }
+
+        .topic-chip:hover {
+            border-color: var(--text-soft);
+            color: var(--text)
+        }
+
+        .topic-chip.active {
+            background: var(--orange);
+            color: #000;
+            border-color: var(--orange)
+        }
+
+        .prob-table {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        .prob-table thead th {
+            text-align: left;
+            padding: 10px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border)
+        }
+
+        .prob-table tbody tr {
+            border-bottom: 1px solid rgba(48, 54, 61, .4);
+            transition: background .1s
+        }
+
+        .prob-table tbody tr:hover {
+            background: var(--surface)
+        }
+
+        .prob-table td {
+            padding: 14px;
+            font-size: 14px
+        }
+
+        .td-status {
+            width: 40px;
+            text-align: center
+        }
+
+        .td-title {
+            font-weight: 600;
+            cursor: pointer;
+            transition: color .15s
+        }
+
+        .td-title:hover {
+            color: var(--orange)
+        }
+
+        .diff-tag {
+            font-size: 12px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px
+        }
+
+        .diff-easy {
+            color: var(--easy);
+            background: rgba(63, 185, 80, .1)
+        }
+
+        .diff-medium {
+            color: var(--medium);
+            background: rgba(255, 166, 87, .1)
+        }
+
+        .diff-hard {
+            color: var(--hard);
+            background: rgba(248, 81, 73, .1)
+        }
+
+        .solve-btn {
+            padding: 6px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--blue);
+            background: transparent;
+            color: var(--blue);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: .15s;
+            font-family: inherit
+        }
+
+        .solve-btn:hover {
+            background: var(--blue);
+            color: #000
+        }
+
+        .editor-view {
+            display: none;
+            height: calc(100vh - 64px)
+        }
+
+        .ev-split {
+            display: flex;
+            height: 100%
+        }
+
+        .ev-left {
+            width: 45%;
+            min-width: 340px;
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            background: var(--bg)
+        }
+
+        .ev-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg2)
+        }
+
+        .ev-back {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            transition: .15s;
+            background: none;
+            border-left: none;
+            border-right: none;
+            border-top: none;
+            width: 100%;
+            text-align: left;
+            font-family: inherit
+        }
+
+        .ev-back:hover {
+            color: var(--text);
+            background: var(--surface)
+        }
+
+        .ev-desc {
+            padding: 24px 24px 16px
+        }
+
+        .ev-title {
+            font-family: 'Syne';
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 6px
+        }
+
+        .ev-diff {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            margin-bottom: 16px
+        }
+
+        .ev-section {
+            margin-bottom: 18px
+        }
+
+        .ev-section h4 {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            color: var(--text-muted);
+            margin-bottom: 8px
+        }
+
+        .ev-section p {
+            font-size: 14px;
+            line-height: 1.8;
+            color: var(--text-soft)
+        }
+
+        .ev-example {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-bottom: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.7
+        }
+
+        .ev-example .ex-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-bottom: 4px
+        }
+
+        .ev-example .ex-val {
+            color: var(--cyan)
+        }
+
+        .ed-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface)
+        }
+
+        .ed-lang select {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 13px;
+            font-family: 'DM Sans';
+            cursor: pointer
+        }
+
+        .ed-actions {
+            display: flex;
+            gap: 8px
+        }
+
+        .btn-run {
+            padding: 7px 18px;
+            border-radius: 8px;
+            border: 1px solid var(--green);
+            background: transparent;
+            color: var(--green);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: .15s;
+            display: flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .btn-run:hover {
+            background: var(--green);
+            color: #000
+        }
+
+        .btn-submit {
+            padding: 7px 18px;
+            border-radius: 8px;
+            border: none;
+            background: var(--orange);
+            color: #000;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: .15s;
+            display: flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .btn-submit:hover {
+            filter: brightness(1.1)
+        }
+
+        .btn-run:disabled,
+        .btn-submit:disabled {
+            opacity: .5;
+            cursor: not-allowed
+        }
+
+        .ed-monaco {
+            flex: 1;
+            min-height: 0
+        }
+
+        .ed-results {
+            border-top: 1px solid var(--border);
+            background: var(--surface);
+            max-height: 240px;
+            overflow-y: auto;
+            padding: 14px 18px
+        }
+
+        .res-title {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .tc-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-family: 'JetBrains Mono', monospace
+        }
+
+        .tc-pass {
+            background: rgba(63, 185, 80, .08);
+            border: 1px solid rgba(63, 185, 80, .2)
+        }
+
+        .tc-pass .tc-icon {
+            color: var(--green)
+        }
+
+        .tc-fail {
+            background: rgba(248, 81, 73, .08);
+            border: 1px solid rgba(248, 81, 73, .2)
+        }
+
+        .tc-fail .tc-icon {
+            color: var(--red)
+        }
+
+        .tc-pending {
+            background: var(--bg);
+            border: 1px solid var(--border)
+        }
+
+        .tc-pending .tc-icon {
+            color: var(--text-muted)
+        }
+
+        .tc-info {
+            flex: 1;
+            min-width: 0
+        }
+
+        .tc-info span {
+            display: block;
+            font-size: 11px;
+            color: var(--text-muted)
+        }
+
+        .res-verdict {
+            text-align: center;
+            padding: 16px;
+            font-family: 'Syne';
+            font-size: 20px;
+            font-weight: 800
+        }
+
+        .verdict-ac {
+            color: var(--green)
+        }
+
+        .verdict-wa {
+            color: var(--red)
+        }
+
+        .res-idle {
+            color: var(--text-muted);
+            font-size: 14px;
+            text-align: center;
+            padding: 20px
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--text-muted);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin .6s linear infinite
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        @media(max-width:768px) {
+            .navbar {
+                padding: 0 16px
+            }
+
+            .list-view {
+                padding: 20px 16px
+            }
+
+            .ev-split {
+                flex-direction: column
+            }
+
+            .ev-left {
+                width: 100%;
+                max-height: 40vh;
+                border-right: none;
+                border-bottom: 1px solid var(--border)
+            }
+
+            .ev-right {
+                flex: 1
+            }
+        }
+
+        /* ── CSV Upload Modal ── */
+        .csv-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 20px;
+            border-radius: 10px;
+            border: 1px solid var(--orange);
+            background: rgba(255, 161, 22, 0.08);
+            color: var(--orange);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: all .25s ease
+        }
+
+        .csv-btn:hover {
+            background: var(--orange);
+            color: #000;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px var(--orange-glow)
+        }
+
+        .csv-btn i {
+            font-size: 14px
+        }
+
+        .modal-overlay {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 9990;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            pointer-events: auto
+        }
+
+        .modal-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 85vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
+            transform: scale(0.92) translateY(20px);
+            transition: transform .35s cubic-bezier(0.16, 1, 0.3, 1)
+        }
+
+        .modal-overlay.active .modal-box {
+            transform: scale(1) translateY(0)
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px 28px 18px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .modal-header h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 22px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .modal-header h2 i {
+            color: var(--orange);
+            font-size: 20px
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: .2s
+        }
+
+        .modal-close:hover {
+            border-color: var(--red);
+            color: var(--red);
+            background: rgba(248, 81, 73, 0.08)
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 28px
+        }
+
+        .modal-body::-webkit-scrollbar {
+            width: 5px
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px
+        }
+
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 18px 28px;
+            border-top: 1px solid var(--border)
+        }
+
+        .modal-footer .foot-left {
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .btn-template {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--cyan);
+            background: rgba(121, 192, 255, 0.06);
+            color: var(--cyan);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: .2s
+        }
+
+        .btn-template:hover {
+            background: var(--cyan);
+            color: #000
+        }
+
+        .btn-confirm {
+            padding: 9px 24px;
+            border-radius: 10px;
+            border: none;
+            background: var(--green);
+            color: #000;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: .2s;
+            display: flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .btn-confirm:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px)
+        }
+
+        .btn-confirm:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+            transform: none
+        }
+
+        .btn-cancel {
+            padding: 9px 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: .2s
+        }
+
+        .btn-cancel:hover {
+            border-color: var(--text-soft);
+            color: var(--text)
+        }
+
+        /* Dropzone */
+        .csv-dropzone {
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 40px 24px;
+            text-align: center;
+            transition: all .25s ease;
+            cursor: pointer;
+            position: relative
+        }
+
+        .csv-dropzone:hover,
+        .csv-dropzone.dragover {
+            border-color: var(--orange);
+            background: rgba(255, 161, 22, 0.04)
+        }
+
+        .csv-dropzone .dz-icon {
+            font-size: 40px;
+            color: var(--border);
+            margin-bottom: 14px;
+            transition: color .2s
+        }
+
+        .csv-dropzone:hover .dz-icon,
+        .csv-dropzone.dragover .dz-icon {
+            color: var(--orange)
+        }
+
+        .csv-dropzone .dz-text {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-soft);
+            margin-bottom: 6px
+        }
+
+        .csv-dropzone .dz-sub {
+            font-size: 12px;
+            color: var(--text-muted)
+        }
+
+        .csv-dropzone input[type=file] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer
+        }
+
+        .csv-dropzone .dz-browse {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 6px 16px;
+            border-radius: 8px;
+            background: rgba(255, 161, 22, 0.1);
+            color: var(--orange);
+            font-size: 12px;
+            font-weight: 700;
+            pointer-events: none
+        }
+
+        /* File loaded state */
+        .csv-file-loaded {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            background: rgba(63, 185, 80, 0.06);
+            border: 1px solid rgba(63, 185, 80, 0.2);
+            margin-bottom: 20px
+        }
+
+        .csv-file-loaded i {
+            font-size: 22px;
+            color: var(--green)
+        }
+
+        .csv-file-info {
+            flex: 1;
+            min-width: 0
+        }
+
+        .csv-file-info .fname {
+            font-weight: 700;
+            font-size: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .csv-file-info .fmeta {
+            font-size: 12px;
+            color: var(--text-muted)
+        }
+
+        .csv-file-remove {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: .2s
+        }
+
+        .csv-file-remove:hover {
+            border-color: var(--red);
+            color: var(--red)
+        }
+
+        /* Preview table */
+        .csv-preview-label {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .csv-preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px
+        }
+
+        .csv-preview-table th {
+            text-align: left;
+            padding: 9px 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            color: var(--text-muted);
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0
+        }
+
+        .csv-preview-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(48, 54, 61, 0.4);
+            vertical-align: top;
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .csv-preview-table tbody tr {
+            transition: background .1s
+        }
+
+        .csv-preview-table tbody tr:hover {
+            background: var(--bg)
+        }
+
+        .csv-preview-wrap {
+            max-height: 320px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-top: 8px
+        }
+
+        .csv-preview-wrap::-webkit-scrollbar {
+            width: 4px
+        }
+
+        .csv-preview-wrap::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px
+        }
+
+        /* Error state */
+        .csv-error {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            background: rgba(248, 81, 73, 0.06);
+            border: 1px solid rgba(248, 81, 73, 0.2);
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: var(--red)
+        }
+
+        .csv-error i {
+            font-size: 16px;
+            margin-top: 1px;
+            flex-shrink: 0
+        }
+
+        /* Stats badges */
+        .csv-stats {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px
+        }
+
+        .csv-stat {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .csv-stat-total {
+            background: rgba(88, 166, 255, 0.1);
+            color: var(--blue)
+        }
+
+        .csv-stat-easy {
+            background: rgba(63, 185, 80, 0.1);
+            color: var(--easy)
+        }
+
+        .csv-stat-medium {
+            background: rgba(255, 166, 87, 0.1);
+            color: var(--medium)
+        }
+
+        .csv-stat-hard {
+            background: rgba(248, 81, 73, 0.1);
+            color: var(--hard)
+        }
+
+        /* Custom problems badge on main page */
+        .custom-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(210, 168, 255, 0.1);
+            color: var(--purple);
+            margin-left: 8px;
+            vertical-align: middle
+        }
+
+        /* My Submissions Panel */
+        .submissions-section {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border)
+        }
+
+        .submissions-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px
+        }
+
+        .submissions-header h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .submissions-header h3 i {
+            color: var(--orange);
+            font-size: 16px
+        }
+
+        .sub-tabs {
+            display: flex;
+            gap: 6px
+        }
+
+        .sub-tab {
+            padding: 5px 14px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: .15s;
+            font-family: inherit
+        }
+
+        .sub-tab:hover {
+            border-color: var(--text-soft);
+            color: var(--text)
+        }
+
+        .sub-tab.active {
+            background: var(--orange);
+            color: #000;
+            border-color: var(--orange)
+        }
+
+        .sub-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: .15s
+        }
+
+        .sub-card:hover {
+            border-color: var(--border2);
+            background: var(--surface2)
+        }
+
+        .sub-card-info {
+            flex: 1;
+            min-width: 0
+        }
+
+        .sub-card-title {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .sub-card-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap
+        }
+
+        .sub-status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            flex-shrink: 0
+        }
+
+        .sub-pending {
+            background: rgba(210, 168, 255, 0.1);
+            color: var(--purple)
+        }
+
+        .sub-approved {
+            background: rgba(63, 185, 80, 0.1);
+            color: var(--green)
+        }
+
+        .sub-rejected {
+            background: rgba(248, 81, 73, 0.1);
+            color: var(--red)
+        }
+
+        .sub-empty {
+            text-align: center;
+            padding: 28px;
+            color: var(--text-muted);
+            font-size: 14px
+        }
+
+        .sub-reject-reason {
+            font-size: 11px;
+            color: var(--red);
+            margin-top: 4px;
+            font-style: italic
+        }
+
+        /* Admin badge in navbar */
+        .admin-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            background: rgba(255, 161, 22, 0.15);
+            color: var(--orange);
+            margin-left: 6px
+        }
     </style>
 </head>
+
 <body>
 
-<nav class="navbar">
-    <a href="Explore.html" class="nav-brand">NIET<span>Code</span></a>
-    <div class="nav-links">
-        <a href="Explore.html" class="nav-link">Explore</a>
-        <a href="Problems.html" class="nav-link active">Problems</a>
-        <a href="Blueprint.html" class="nav-link">Blueprint</a>
-        <a href="Placements.html" class="nav-link">Placements</a>
-        <a href="Profile.html" class="nav-link">Profile</a>
-    </div>
-    <div class="nav-right" id="nav-right">
-        <a href="Login.html" class="btn-ghost">Log in</a>
-        <a href="Login.html" class="btn-cta">Get Started</a>
-    </div>
-</nav>
-
-<div class="list-view" id="list-view">
-    <div class="list-header">
-        <h1 id="list-title">All Problems</h1>
-    </div>
-    <div class="topic-bar" id="topic-bar"></div>
-    <table class="prob-table">
-        <thead><tr><th class="td-status">Status</th><th>Title</th><th>Difficulty</th><th>Action</th></tr></thead>
-        <tbody id="prob-tbody"></tbody>
-    </table>
-</div>
-
-<div class="editor-view" id="editor-view">
-    <div class="ev-split">
-        <div class="ev-left">
-            <button class="ev-back" onclick="closeEditor()"><i class="fa-solid fa-arrow-left"></i> Back to Problems</button>
-            <div class="ev-desc" id="ev-desc"></div>
+    <nav class="navbar">
+        <a href="Explore.html" class="nav-brand">NIET<span>Code</span></a>
+        <div class="nav-links">
+            <a href="Explore.html" class="nav-link">Explore</a>
+            <a href="Problems.html" class="nav-link active">Problems</a>
+            <a href="Blueprint.html" class="nav-link">Blueprint</a>
+            <a href="Placements.html" class="nav-link">Placements</a>
+            <a href="Profile.html" class="nav-link">Profile</a>
         </div>
-        <div class="ev-right">
-            <div class="ed-topbar">
-                <div class="ed-lang"><select id="lang-select" onchange="onLangChange()">
-                    <option value="javascript">JavaScript</option>
-                    <option value="python">Python 3</option>
-                    <option value="java">Java</option>
-                    <option value="cpp">C++ 17</option>
-                </select></div>
-                <div class="ed-actions">
-                    <button class="btn-run" id="btn-run" onclick="runCode()"><i class="fa-solid fa-play"></i> Run</button>
-                    <button class="btn-submit" id="btn-submit" onclick="submitCode()"><i class="fa-solid fa-paper-plane"></i> Submit</button>
+        <div class="nav-right" id="nav-right">
+            <a href="Login.html" class="btn-ghost">Log in</a>
+            <a href="Login.html" class="btn-cta">Get Started</a>
+        </div>
+    </nav>
+
+    <div class="list-view" id="list-view">
+        <div class="list-header">
+            <h1 id="list-title">All Problems</h1>
+            <button class="csv-btn" id="csv-upload-btn" onclick="openCSVModal()"><i class="fa-solid fa-file-csv"></i>
+                Add via CSV</button>
+        </div>
+        <div class="topic-bar" id="topic-bar"></div>
+        <table class="prob-table">
+            <thead>
+                <tr>
+                    <th class="td-status">Status</th>
+                    <th>Title</th>
+                    <th>Difficulty</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="prob-tbody"></tbody>
+        </table>
+        <div class="submissions-section" id="my-submissions-area"></div>
+    </div>
+
+    <!-- CSV Upload Modal -->
+    <div class="modal-overlay" id="csv-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-file-csv"></i> Import Problems from CSV</h2>
+                <button class="modal-close" onclick="closeCSVModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" id="csv-modal-body">
+                <div id="csv-dropzone-area">
+                    <div class="csv-dropzone" id="csv-dropzone">
+                        <input type="file" accept=".csv" id="csv-file-input" onchange="handleCSVFile(event)">
+                        <div class="dz-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                        <div class="dz-text">Drag &amp; drop your CSV file here</div>
+                        <div class="dz-sub">or click to browse files • Supports .csv format</div>
+                        <span class="dz-browse">Browse Files</span>
+                    </div>
+                </div>
+                <div id="csv-preview-area" style="display:none"></div>
+            </div>
+            <div class="modal-footer">
+                <div class="foot-left">
+                    <button class="btn-template" onclick="downloadCSVTemplate()"><i class="fa-solid fa-download"></i>
+                        Download Template</button>
+                    <button class="btn-cancel" id="csv-clear-btn" onclick="clearCSVUpload()" style="display:none"><i
+                            class="fa-solid fa-rotate-left"></i> Reset</button>
+                </div>
+                <div style="display:flex;gap:10px">
+                    <button class="btn-cancel" onclick="closeCSVModal()">Cancel</button>
+                    <button class="btn-confirm" id="csv-confirm-btn" onclick="confirmCSVImport()" disabled><i
+                            class="fa-solid fa-paper-plane"></i> Submit for Review</button>
                 </div>
             </div>
-            <div class="ed-monaco" id="ed-monaco"></div>
-            <div class="ed-results" id="ed-results">
-                <div class="res-idle">Select a problem and write your solution. Click <strong>Run</strong> to test against sample cases or <strong>Submit</strong> to check all cases.</div>
+        </div>
+    </div>
+
+    <div class="editor-view" id="editor-view">
+        <div class="ev-split">
+            <div class="ev-left">
+                <button class="ev-back" onclick="closeEditor()"><i class="fa-solid fa-arrow-left"></i> Back to
+                    Problems</button>
+                <div class="ev-desc" id="ev-desc"></div>
+            </div>
+            <div class="ev-right">
+                <div class="ed-topbar">
+                    <div class="ed-lang"><select id="lang-select" onchange="onLangChange()">
+                            <option value="javascript">JavaScript</option>
+                            <option value="python">Python 3</option>
+                            <option value="java">Java</option>
+                            <option value="cpp">C++ 17</option>
+                        </select></div>
+                    <div class="ed-actions">
+                        <button class="btn-run" id="btn-run" onclick="runCode()"><i class="fa-solid fa-play"></i>
+                            Run</button>
+                        <button class="btn-submit" id="btn-submit" onclick="submitCode()"><i
+                                class="fa-solid fa-paper-plane"></i> Submit</button>
+                    </div>
+                </div>
+                <div class="ed-monaco" id="ed-monaco"></div>
+                <div class="ed-results" id="ed-results">
+                    <div class="res-idle">Select a problem and write your solution. Click <strong>Run</strong> to test
+                        against sample cases or <strong>Submit</strong> to check all cases.</div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script src="problems-data.js"></script>
-<script>
-let currentUser = null;
-let monacoEditor = null;
-let activeProblem = null;
-let activeTopic = 'All';
-let savedCodes = {};
-let db = null;
-let saveCodeTimer = null;
+    <script src="problems-data.js"></script>
+    <script>
+        let currentUser = null;
+        let monacoEditor = null;
+        let activeProblem = null;
+        let activeTopic = 'All';
+        let savedCodes = {};
+        let db = null;
+        let saveCodeTimer = null;
+        let isUserAdmin = false;
 
-function initFirebase(){
-    if(typeof firebase==='undefined')return false;
-    try{
-        if(!firebase.apps.length){
-            firebase.initializeApp({
-                apiKey:"AIzaSyBvS473QS25-jvd_zm4VmOA5UX4yIbvytU",
-                authDomain:"niet-code.firebaseapp.com",
-                projectId:"niet-code",
-                storageBucket:"niet-code.firebasestorage.app",
-                messagingSenderId:"331564337114",
-                appId:"1:331564337114:web:56c072292a02d8fc4422e3"
-            });
+        // ── Admin Configuration ──
+        const ADMIN_EMAILS = ['kartikkesarwani149@gmail.com'];
+        function checkIsAdmin(user) {
+            return user && user.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
         }
-        db = firebase.firestore();
-        firebase.auth().onAuthStateChanged(async user=>{
-            currentUser=user;
-            updateNavbar(user);
-            if(!user) window.location.href='Login.html';
-            else await loadUserData(user.uid);
-        });
-        window.doSignOut=function(){firebase.auth().signOut()};
-        return true;
-    }catch(e){console.warn('Firebase:',e.message);return false}
-}
-if(!initFirebase()){
-    let a=0;const iv=setInterval(()=>{a++;if(initFirebase()||a>=6){clearInterval(iv);if(a>=6){updateNavbar(null);window.location.href='Login.html';}}},500);
-}
 
-function updateNavbar(user){
-    const nr=document.getElementById('nav-right');
-    if(!user){nr.innerHTML='<a href="Login.html" class="btn-ghost">Log in</a><a href="Login.html" class="btn-cta">Get Started</a>';return;}
-    const i=(user.displayName||user.email).charAt(0).toUpperCase();
-    const n=user.displayName||user.email.split('@')[0];
-    const e=user.email||'';
-    nr.innerHTML=`<div class="profile-wrap" id="profile-wrap"><div class="user-pill" onclick="document.getElementById('profile-wrap').classList.toggle('open')"><div class="user-avatar">${i}</div><span class="user-name">${n}</span><i class="fa-solid fa-chevron-down pill-chevron"></i></div><div class="profile-dropdown"><div class="dd-header"><div class="dd-avatar">${i}</div><div class="dd-info"><div class="dd-name">${n}</div><div class="dd-email">${e}</div></div></div><div class="dd-menu"><a href="Profile.html" class="dd-item"><i class="fa-regular fa-user"></i> My Profile</a><a href="Problems.html" class="dd-item"><i class="fa-solid fa-code"></i> My Submissions</a><div class="dd-divider"></div><a href="Profile.html" class="dd-item"><i class="fa-solid fa-gear"></i> Settings</a><div class="dd-divider"></div><button class="dd-item dd-danger" onclick="window.doSignOut()"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button></div></div></div>`;
-}
-document.addEventListener('click',e=>{const w=document.getElementById('profile-wrap');if(w&&!w.contains(e.target))w.classList.remove('open')});
+        function initFirebase() {
+            if (typeof firebase === 'undefined') return false;
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp({
+                        apiKey: "AIzaSyBvS473QS25-jvd_zm4VmOA5UX4yIbvytU",
+                        authDomain: "niet-code.firebaseapp.com",
+                        projectId: "niet-code",
+                        storageBucket: "niet-code.firebasestorage.app",
+                        messagingSenderId: "331564337114",
+                        appId: "1:331564337114:web:56c072292a02d8fc4422e3"
+                    });
+                }
+                db = firebase.firestore();
+                firebase.auth().onAuthStateChanged(async user => {
+                    currentUser = user;
+                    updateNavbar(user);
+                    if (!user) window.location.href = 'Login.html';
+                    else await loadUserData(user.uid);
+                });
+                window.doSignOut = function () { firebase.auth().signOut() };
+                return true;
+            } catch (e) { console.warn('Firebase:', e.message); return false }
+        }
+        if (!initFirebase()) {
+            let a = 0; const iv = setInterval(() => { a++; if (initFirebase() || a >= 6) { clearInterval(iv); if (a >= 6) { updateNavbar(null); window.location.href = 'Login.html'; } } }, 500);
+        }
 
-function renderTopicBar(){
-    const bar=document.getElementById('topic-bar');
-    bar.innerHTML=TOPICS.map(t=>`<button class="topic-chip${t===activeTopic?' active':''}" onclick="filterTopic('${t}')">${t}</button>`).join('');
-}
-function filterTopic(t){
-    activeTopic=t;
-    renderTopicBar();
-    renderProblemList();
-}
-function renderProblemList(){
-    const tbody=document.getElementById('prob-tbody');
-    const title=document.getElementById('list-title');
-    const filtered=activeTopic==='All'?PROBLEMS:PROBLEMS.filter(p=>p.topic===activeTopic);
-    title.textContent=activeTopic==='All'?'All Problems':activeTopic+' Problems';
-    tbody.innerHTML=filtered.map(p=>`<tr>
-        <td class="td-status">${p.solved?'<i class="fa-solid fa-circle-check" style="color:var(--green)"></i>':'<i class="fa-regular fa-circle" style="color:var(--border)"></i>'}</td>
+        function updateNavbar(user) {
+            const nr = document.getElementById('nav-right');
+            if (!user) { nr.innerHTML = '<a href="Login.html" class="btn-ghost">Log in</a><a href="Login.html" class="btn-cta">Get Started</a>'; return; }
+            const i = (user.displayName || user.email).charAt(0).toUpperCase();
+            const n = user.displayName || user.email.split('@')[0];
+            const e = user.email || '';
+            const adminLink = isUserAdmin ? '<a href="Admin.html" class="dd-item"><i class="fa-solid fa-shield-halved"></i> Admin Dashboard <span class="admin-badge">ADMIN</span></a><div class="dd-divider"></div>' : '';
+            nr.innerHTML = `<div class="profile-wrap" id="profile-wrap"><div class="user-pill" onclick="document.getElementById('profile-wrap').classList.toggle('open')"><div class="user-avatar">${i}</div><span class="user-name">${n}</span>${isUserAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}<i class="fa-solid fa-chevron-down pill-chevron"></i></div><div class="profile-dropdown"><div class="dd-header"><div class="dd-avatar">${i}</div><div class="dd-info"><div class="dd-name">${n}</div><div class="dd-email">${e}</div></div></div><div class="dd-menu">${adminLink}<a href="Profile.html" class="dd-item"><i class="fa-regular fa-user"></i> My Profile</a><a href="Problems.html" class="dd-item"><i class="fa-solid fa-code"></i> My Submissions</a><div class="dd-divider"></div><a href="Profile.html" class="dd-item"><i class="fa-solid fa-gear"></i> Settings</a><div class="dd-divider"></div><button class="dd-item dd-danger" onclick="window.doSignOut()"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button></div></div></div>`;
+        }
+        document.addEventListener('click', e => { const w = document.getElementById('profile-wrap'); if (w && !w.contains(e.target)) w.classList.remove('open') });
+
+        function renderTopicBar() {
+            const bar = document.getElementById('topic-bar');
+            bar.innerHTML = TOPICS.map(t => `<button class="topic-chip${t === activeTopic ? ' active' : ''}" onclick="filterTopic('${t}')">${t}</button>`).join('');
+        }
+        function filterTopic(t) {
+            activeTopic = t;
+            renderTopicBar();
+            renderProblemList();
+        }
+        function renderProblemList() {
+            const tbody = document.getElementById('prob-tbody');
+            const title = document.getElementById('list-title');
+            const filtered = activeTopic === 'All' ? PROBLEMS : PROBLEMS.filter(p => p.topic === activeTopic);
+            title.textContent = activeTopic === 'All' ? 'All Problems' : activeTopic + ' Problems';
+            tbody.innerHTML = filtered.map(p => `<tr>
+        <td class="td-status">${p.solved ? '<i class="fa-solid fa-circle-check" style="color:var(--green)"></i>' : '<i class="fa-regular fa-circle" style="color:var(--border)"></i>'}</td>
         <td class="td-title" onclick="openEditor('${p.id}')">${p.title}</td>
         <td><span class="diff-tag diff-${p.diff.toLowerCase()}">${p.diff}</span></td>
         <td><button class="solve-btn" onclick="openEditor('${p.id}')"><i class="fa-solid fa-code"></i> Solve</button></td>
     </tr>`).join('');
-}
+        }
 
-function openEditor(pid){
-    const p=PROBLEMS.find(x=>x.id===pid);if(!p)return;
-    activeProblem=p;
-    document.getElementById('list-view').style.display='none';
-    document.getElementById('editor-view').style.display='block';
-    const diffClass='diff-'+p.diff.toLowerCase();
-    let html=`<div class="ev-title">${p.title}</div><div class="ev-diff ${diffClass}">${p.diff}</div>`;
-    html+=`<div class="ev-section"><h4>Description</h4><p>${p.desc}</p></div>`;
-    html+=`<div class="ev-section"><h4>Constraints</h4><p>${p.constraints}</p></div>`;
-    html+=`<div class="ev-section"><h4>Examples</h4>`;
-    p.examples.forEach((ex,i)=>{
-        html+=`<div class="ev-example"><div class="ex-label">Example ${i+1}</div><div><strong>Input:</strong> <span class="ex-val">${ex.input}</span></div><div><strong>Output:</strong> <span class="ex-val">${ex.output}</span></div></div>`;
-    });
-    html+=`</div>`;
-    document.getElementById('ev-desc').innerHTML=html;
-    document.getElementById('ed-results').innerHTML='<div class="res-idle">Write your solution and click <strong>Run</strong> to test.</div>';
-    const lang=document.getElementById('lang-select').value;
-    initMonaco(p.starters[lang]||'',lang);
-}
-function closeEditor(){
-    document.getElementById('editor-view').style.display='none';
-    document.getElementById('list-view').style.display='';
-    activeProblem=null;
-}
-function onLangChange(){
-    if(!activeProblem)return;
-    const lang=document.getElementById('lang-select').value;
-    const key=activeProblem.id+'-'+lang;
-    const code=savedCodes[key]||activeProblem.starters[lang]||'';
-    if(monacoEditor) monacoEditor.setValue(code);
-    monaco.editor.setModelLanguage(monacoEditor.getModel(), lang==='cpp'?'cpp':lang);
-}
-function initMonaco(code,lang){
-    const container=document.getElementById('ed-monaco');
-    if(monacoEditor){
-        monacoEditor.setValue(code);
-        monaco.editor.setModelLanguage(monacoEditor.getModel(), lang==='cpp'?'cpp':lang);
-        return;
-    }
-    require.config({paths:{vs:'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs'}});
-    require(['vs/editor/editor.main'],function(){
-        monacoEditor=monaco.editor.create(container,{
-            value:code,language:lang==='cpp'?'cpp':lang,
-            theme:'vs-dark',fontSize:14,fontFamily:"'JetBrains Mono',monospace",
-            minimap:{enabled:false},scrollBeyondLastLine:false,padding:{top:12},
-            automaticLayout:true,tabSize:4
-        });
-        monacoEditor.onDidChangeModelContent(()=>{
-            if(activeProblem){
-                const l=document.getElementById('lang-select').value;
-                const key=activeProblem.id+'-'+l;
-                savedCodes[key]=monacoEditor.getValue();
-                clearTimeout(saveCodeTimer);
-                saveCodeTimer=setTimeout(()=>{
-                    if(currentUser&&db){
-                        db.collection('users').doc(currentUser.uid).set(
-                            {savedCodes:{[key]:monacoEditor.getValue()},lastActive:firebase.firestore.FieldValue.serverTimestamp()},
-                            {merge:true}
-                        ).catch(e=>console.warn('Code save:',e.message));
-                    }
-                },3000);
+        function openEditor(pid) {
+            const p = PROBLEMS.find(x => x.id === pid); if (!p) return;
+            activeProblem = p;
+            document.getElementById('list-view').style.display = 'none';
+            document.getElementById('editor-view').style.display = 'block';
+            const diffClass = 'diff-' + p.diff.toLowerCase();
+            let html = `<div class="ev-title">${p.title}</div><div class="ev-diff ${diffClass}">${p.diff}</div>`;
+            html += `<div class="ev-section"><h4>Description</h4><p>${p.desc}</p></div>`;
+            html += `<div class="ev-section"><h4>Constraints</h4><p>${p.constraints}</p></div>`;
+            html += `<div class="ev-section"><h4>Examples</h4>`;
+            p.examples.forEach((ex, i) => {
+                html += `<div class="ev-example"><div class="ex-label">Example ${i + 1}</div><div><strong>Input:</strong> <span class="ex-val">${ex.input}</span></div><div><strong>Output:</strong> <span class="ex-val">${ex.output}</span></div></div>`;
+            });
+            html += `</div>`;
+            document.getElementById('ev-desc').innerHTML = html;
+            document.getElementById('ed-results').innerHTML = '<div class="res-idle">Write your solution and click <strong>Run</strong> to test.</div>';
+            const lang = document.getElementById('lang-select').value;
+            initMonaco(p.starters[lang] || '', lang);
+        }
+        function closeEditor() {
+            document.getElementById('editor-view').style.display = 'none';
+            document.getElementById('list-view').style.display = '';
+            activeProblem = null;
+        }
+        function onLangChange() {
+            if (!activeProblem) return;
+            const lang = document.getElementById('lang-select').value;
+            const key = activeProblem.id + '-' + lang;
+            const code = savedCodes[key] || activeProblem.starters[lang] || '';
+            if (monacoEditor) monacoEditor.setValue(code);
+            monaco.editor.setModelLanguage(monacoEditor.getModel(), lang === 'cpp' ? 'cpp' : lang);
+        }
+        function initMonaco(code, lang) {
+            const container = document.getElementById('ed-monaco');
+            if (monacoEditor) {
+                monacoEditor.setValue(code);
+                monaco.editor.setModelLanguage(monacoEditor.getModel(), lang === 'cpp' ? 'cpp' : lang);
+                return;
             }
-        });
-    });
-}
+            require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs' } });
+            require(['vs/editor/editor.main'], function () {
+                monacoEditor = monaco.editor.create(container, {
+                    value: code, language: lang === 'cpp' ? 'cpp' : lang,
+                    theme: 'vs-dark', fontSize: 14, fontFamily: "'JetBrains Mono',monospace",
+                    minimap: { enabled: false }, scrollBeyondLastLine: false, padding: { top: 12 },
+                    automaticLayout: true, tabSize: 4
+                });
+                monacoEditor.onDidChangeModelContent(() => {
+                    if (activeProblem) {
+                        const l = document.getElementById('lang-select').value;
+                        const key = activeProblem.id + '-' + l;
+                        savedCodes[key] = monacoEditor.getValue();
+                        clearTimeout(saveCodeTimer);
+                        saveCodeTimer = setTimeout(() => {
+                            if (currentUser && db) {
+                                db.collection('users').doc(currentUser.uid).set(
+                                    { savedCodes: { [key]: monacoEditor.getValue() }, lastActive: firebase.firestore.FieldValue.serverTimestamp() },
+                                    { merge: true }
+                                ).catch(e => console.warn('Code save:', e.message));
+                            }
+                        }, 3000);
+                    }
+                });
+            });
+        }
 
-async function executeCode(code, lang, stdin){
-    if(lang==='javascript') return executeJS(code, stdin);
-    if(lang==='python') return executePython(code, stdin);
-    const apis = [tryJudge0, tryWandbox];
-    for(const apiFn of apis){
-        try{
-            const r = await apiFn(code, lang, stdin);
-            if(r && !r._apiFail) return r;
-        }catch(e){console.log(apiFn.name+' error:',e.message)}
-    }
-    return {error:'All compiler APIs are currently unavailable. Please try again in a few minutes or use JavaScript/Python (both run in-browser, no API needed).', output:''};
-}
+        async function executeCode(code, lang, stdin) {
+            if (lang === 'javascript') return executeJS(code, stdin);
+            if (lang === 'python') return executePython(code, stdin);
+            const apis = [tryJudge0, tryWandbox];
+            for (const apiFn of apis) {
+                try {
+                    const r = await apiFn(code, lang, stdin);
+                    if (r && !r._apiFail) return r;
+                } catch (e) { console.log(apiFn.name + ' error:', e.message) }
+            }
+            return { error: 'All compiler APIs are currently unavailable. Please try again in a few minutes or use JavaScript/Python (both run in-browser, no API needed).', output: '' };
+        }
 
-function executeJS(code, stdin){
-    return new Promise(resolve=>{
-        try{
-            let output=[];
-            const cons={log:(...a)=>output.push(a.map(String).join(' ')),
-                        error:(...a)=>output.push(a.map(String).join(' '))};
-            const fakeRequire=(m)=>{
-                if(m==='fs') return {readFileSync:()=>stdin||''};
-                return {};
-            };
-            const fn=new Function('console','require',code);
-            fn(cons, fakeRequire);
-            resolve({output:output.join('\n').trim(), error:''});
-        }catch(e){ resolve({output:'', error:e.toString()}); }
-    });
-}
+        function executeJS(code, stdin) {
+            return new Promise(resolve => {
+                try {
+                    let output = [];
+                    const cons = {
+                        log: (...a) => output.push(a.map(String).join(' ')),
+                        error: (...a) => output.push(a.map(String).join(' '))
+                    };
+                    const fakeRequire = (m) => {
+                        if (m === 'fs') return { readFileSync: () => stdin || '' };
+                        return {};
+                    };
+                    const fn = new Function('console', 'require', code);
+                    fn(cons, fakeRequire);
+                    resolve({ output: output.join('\n').trim(), error: '' });
+                } catch (e) { resolve({ output: '', error: e.toString() }); }
+            });
+        }
 
-let pyodideInstance = null;
-let pyodideLoading = false;
-async function loadPyodide(){
-    if(pyodideInstance) return pyodideInstance;
-    if(pyodideLoading) {
-        while(pyodideLoading) await new Promise(r=>setTimeout(r,200));
-        return pyodideInstance;
-    }
-    pyodideLoading = true;
-    if(!window.loadPyodide){
-        await new Promise((resolve, reject)=>{
-            const s=document.createElement('script');
-            s.src='https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js';
-            s.onload=resolve; s.onerror=reject;
-            document.head.appendChild(s);
-        });
-    }
-    pyodideInstance = await window.loadPyodide();
-    pyodideLoading = false;
-    return pyodideInstance;
-}
+        let pyodideInstance = null;
+        let pyodideLoading = false;
+        async function loadPyodide() {
+            if (pyodideInstance) return pyodideInstance;
+            if (pyodideLoading) {
+                while (pyodideLoading) await new Promise(r => setTimeout(r, 200));
+                return pyodideInstance;
+            }
+            pyodideLoading = true;
+            if (!window.loadPyodide) {
+                await new Promise((resolve, reject) => {
+                    const s = document.createElement('script');
+                    s.src = 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js';
+                    s.onload = resolve; s.onerror = reject;
+                    document.head.appendChild(s);
+                });
+            }
+            pyodideInstance = await window.loadPyodide();
+            pyodideLoading = false;
+            return pyodideInstance;
+        }
 
-async function executePython(code, stdin){
-    try{
-        const py = await loadPyodide();
-        const wrappedCode = `
+        async function executePython(code, stdin) {
+            try {
+                const py = await loadPyodide();
+                const wrappedCode = `
 import sys, io
-sys.stdin = io.StringIO(${JSON.stringify(stdin||'')})
+sys.stdin = io.StringIO(${JSON.stringify(stdin || '')})
 _output = io.StringIO()
 _old_stdout = sys.stdout
 sys.stdout = _output
 try:
-${code.split('\n').map(l=>'    '+l).join('\n')}
+${code.split('\n').map(l => '    ' + l).join('\n')}
 except SystemExit:
     pass
 except Exception as e:
@@ -342,162 +1710,573 @@ except Exception as e:
 sys.stdout = _old_stdout
 _output.getvalue()
 `;
-        const result = await py.runPythonAsync(wrappedCode);
-        return {output:(result||'').trim(), error:''};
-    }catch(e){
-        return {output:'', error:e.message||e.toString()};
-    }
-}
-
-const JUDGE0_LANG_IDS = {java:62, cpp:54};
-const JUDGE0_HOST = 'judge029.p.rapidapi.com';
-const JUDGE0_KEY = '1efc9af920msh1d6d2d88685fe6ep1cab6cjsna38c888dfd4f';
-
-async function tryJudge0(code, lang, stdin){
-    const langId=JUDGE0_LANG_IDS[lang]; if(!langId) return {_apiFail:true};
-    try{
-        const res=await fetch('https://'+JUDGE0_HOST+'/submissions?base64_encoded=true&wait=true&fields=stdout,stderr,compile_output,status',{
-            method:'POST',
-            headers:{
-                'Content-Type':'application/json',
-                'X-RapidAPI-Key':JUDGE0_KEY,
-                'X-RapidAPI-Host':JUDGE0_HOST
-            },
-            body:JSON.stringify({
-                language_id:langId,
-                source_code:btoa(unescape(encodeURIComponent(code))),
-                stdin:btoa(unescape(encodeURIComponent(stdin||'')))
-            })
-        });
-        if(!res.ok) return {_apiFail:true};
-        const d=await res.json();
-        const decode=s=>{try{return decodeURIComponent(escape(atob(s||'')));}catch(e){return s||'';}};
-        const stdout=decode(d.stdout).trim();
-        const stderr=decode(d.stderr).trim();
-        const compileErr=decode(d.compile_output).trim();
-        if(d.status&&d.status.id===6) return {error:compileErr||'Compilation Error', output:''};
-        if(d.status&&d.status.id>3) return {error:stderr||compileErr||'Runtime Error ('+d.status.description+')', output:stdout};
-        return {output:stdout, error:stderr};
-    }catch(e){console.warn('Judge0:',e.message); return {_apiFail:true};}
-}
-
-const WANDBOX_MAP = {java:'openjdk-jdk-17.0.0+35', cpp:'gcc-12.2.0'};
-async function tryWandbox(code, lang, stdin){
-    const compiler=WANDBOX_MAP[lang]; if(!compiler) return {_apiFail:true};
-    try{
-        const res=await fetch('https://wandbox.org/api/compile.json',{
-            method:'POST', headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({code,compiler,stdin:stdin||'','compiler-option-raw':lang==='cpp'?'-std=c++17':''})
-        });
-        if(!res.ok) return {_apiFail:true};
-        const d=await res.json();
-        if(d.compiler_error) return {error:d.compiler_error, output:''};
-        const out=(d.program_output||'').trim(), err=(d.program_error||'').trim();
-        if(d.status&&d.status!=='0'&&!out) return {error:err||'Runtime error', output:''};
-        return {output:out, error:err};
-    }catch(e){return {_apiFail:true};}
-}
-
-async function runCode(){
-    if(!activeProblem||!monacoEditor)return;
-    const code=monacoEditor.getValue();
-    const lang=document.getElementById('lang-select').value;
-    const tests=activeProblem.allTests.slice(0,3);
-    setButtonsLoading(true);
-    const rDiv=document.getElementById('ed-results');
-    rDiv.innerHTML='<div class="res-title"><div class="spinner"></div> Running sample test cases...</div>';
-    let html='<div class="res-title"><i class="fa-solid fa-flask"></i> Sample Test Results</div>';
-    let allPass=true;
-    for(let i=0;i<tests.length;i++){
-        try{
-            const r=await executeCode(code,lang,tests[i].input);
-            const pass=r.output===tests[i].output;
-            if(!pass)allPass=false;
-            html+=`<div class="tc-row ${pass?'tc-pass':'tc-fail'}"><span class="tc-icon">${pass?'<i class="fa-solid fa-circle-check"></i>':'<i class="fa-solid fa-circle-xmark"></i>'}</span><div class="tc-info"><strong>Case ${i+1}</strong><span>Input: ${tests[i].input.replace(/\n/g,' | ')}</span><span>Expected: ${tests[i].output} ${pass?'':'| Got: '+(r.error||r.output||'(empty)')}</span></div></div>`;
-        }catch(e){
-            allPass=false;
-            html+=`<div class="tc-row tc-fail"><span class="tc-icon"><i class="fa-solid fa-circle-xmark"></i></span><div class="tc-info"><strong>Case ${i+1}</strong><span>Error: ${e.message}</span></div></div>`;
+                const result = await py.runPythonAsync(wrappedCode);
+                return { output: (result || '').trim(), error: '' };
+            } catch (e) {
+                return { output: '', error: e.message || e.toString() };
+            }
         }
-    }
-    html+=`<div class="res-verdict ${allPass?'verdict-ac':'verdict-wa'}">${allPass?'✅ All Sample Cases Passed':'❌ Some Cases Failed'}</div>`;
-    rDiv.innerHTML=html;
-    setButtonsLoading(false);
-}
 
-async function submitCode(){
-    if(!activeProblem||!monacoEditor)return;
-    const code=monacoEditor.getValue();
-    const lang=document.getElementById('lang-select').value;
-    const tests=activeProblem.allTests;
-    setButtonsLoading(true);
-    const rDiv=document.getElementById('ed-results');
-    rDiv.innerHTML='<div class="res-title"><div class="spinner"></div> Submitting — running all test cases...</div>';
-    let html='<div class="res-title"><i class="fa-solid fa-paper-plane"></i> Submission Results</div>';
-    let passed=0;
-    for(let i=0;i<tests.length;i++){
-        try{
-            const r=await executeCode(code,lang,tests[i].input);
-            const pass=r.output===tests[i].output;
-            if(pass)passed++;
-            html+=`<div class="tc-row ${pass?'tc-pass':'tc-fail'}"><span class="tc-icon">${pass?'<i class="fa-solid fa-circle-check"></i>':'<i class="fa-solid fa-circle-xmark"></i>'}</span><div class="tc-info"><strong>Test ${i+1}${i<3?' (sample)':' (hidden)'}</strong><span>${pass?'Passed':('Expected: '+tests[i].output+' | Got: '+(r.error||r.output||'(empty)'))}</span></div></div>`;
-        }catch(e){
-            html+=`<div class="tc-row tc-fail"><span class="tc-icon"><i class="fa-solid fa-circle-xmark"></i></span><div class="tc-info"><strong>Test ${i+1}</strong><span>Error: ${e.message}</span></div></div>`;
+        const JUDGE0_LANG_IDS = { java: 62, cpp: 54 };
+        const JUDGE0_HOST = 'judge029.p.rapidapi.com';
+        const JUDGE0_KEY = '1efc9af920msh1d6d2d88685fe6ep1cab6cjsna38c888dfd4f';
+
+        async function tryJudge0(code, lang, stdin) {
+            const langId = JUDGE0_LANG_IDS[lang]; if (!langId) return { _apiFail: true };
+            try {
+                const res = await fetch('https://' + JUDGE0_HOST + '/submissions?base64_encoded=true&wait=true&fields=stdout,stderr,compile_output,status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-RapidAPI-Key': JUDGE0_KEY,
+                        'X-RapidAPI-Host': JUDGE0_HOST
+                    },
+                    body: JSON.stringify({
+                        language_id: langId,
+                        source_code: btoa(unescape(encodeURIComponent(code))),
+                        stdin: btoa(unescape(encodeURIComponent(stdin || '')))
+                    })
+                });
+                if (!res.ok) return { _apiFail: true };
+                const d = await res.json();
+                const decode = s => { try { return decodeURIComponent(escape(atob(s || ''))); } catch (e) { return s || ''; } };
+                const stdout = decode(d.stdout).trim();
+                const stderr = decode(d.stderr).trim();
+                const compileErr = decode(d.compile_output).trim();
+                if (d.status && d.status.id === 6) return { error: compileErr || 'Compilation Error', output: '' };
+                if (d.status && d.status.id > 3) return { error: stderr || compileErr || 'Runtime Error (' + d.status.description + ')', output: stdout };
+                return { output: stdout, error: stderr };
+            } catch (e) { console.warn('Judge0:', e.message); return { _apiFail: true }; }
         }
-    }
-    const allPass=passed===tests.length;
-    html+=`<div class="res-verdict ${allPass?'verdict-ac':'verdict-wa'}">${allPass?'🎉 Accepted — '+passed+'/'+tests.length+' Passed':'❌ Wrong Answer — '+passed+'/'+tests.length+' Passed'}</div>`;
-    rDiv.innerHTML=html;
-    if(allPass&&currentUser&&db){
-        activeProblem.solved=true;
-        renderProblemList();
-        try{
-            await db.collection('users').doc(currentUser.uid).set({
-                solvedProblems:firebase.firestore.FieldValue.arrayUnion(activeProblem.id),
-                stats:recalcStats(),
-                lastActive:firebase.firestore.FieldValue.serverTimestamp()
-            },{merge:true});
-        }catch(e){console.warn('Save solved:',e.message)}
-    }
-    setButtonsLoading(false);
-}
 
-function setButtonsLoading(loading){
-    document.getElementById('btn-run').disabled=loading;
-    document.getElementById('btn-submit').disabled=loading;
-}
+        const WANDBOX_MAP = { java: 'openjdk-jdk-17.0.0+35', cpp: 'gcc-12.2.0' };
+        async function tryWandbox(code, lang, stdin) {
+            const compiler = WANDBOX_MAP[lang]; if (!compiler) return { _apiFail: true };
+            try {
+                const res = await fetch('https://wandbox.org/api/compile.json', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code, compiler, stdin: stdin || '', 'compiler-option-raw': lang === 'cpp' ? '-std=c++17' : '' })
+                });
+                if (!res.ok) return { _apiFail: true };
+                const d = await res.json();
+                if (d.compiler_error) return { error: d.compiler_error, output: '' };
+                const out = (d.program_output || '').trim(), err = (d.program_error || '').trim();
+                if (d.status && d.status !== '0' && !out) return { error: err || 'Runtime error', output: '' };
+                return { output: out, error: err };
+            } catch (e) { return { _apiFail: true }; }
+        }
 
-async function loadUserData(uid){
-    try{
-        const doc=await db.collection('users').doc(uid).get();
-        if(doc.exists){
-            const data=doc.data();
-            (data.solvedProblems||[]).forEach(pid=>{
-                const p=PROBLEMS.find(x=>x.id===pid);
-                if(p) p.solved=true;
+        async function runCode() {
+            if (!activeProblem || !monacoEditor) return;
+            const code = monacoEditor.getValue();
+            const lang = document.getElementById('lang-select').value;
+            const tests = activeProblem.allTests.slice(0, 3);
+            setButtonsLoading(true);
+            const rDiv = document.getElementById('ed-results');
+            rDiv.innerHTML = '<div class="res-title"><div class="spinner"></div> Running sample test cases...</div>';
+            let html = '<div class="res-title"><i class="fa-solid fa-flask"></i> Sample Test Results</div>';
+            let allPass = true;
+            for (let i = 0; i < tests.length; i++) {
+                try {
+                    const r = await executeCode(code, lang, tests[i].input);
+                    const pass = r.output === tests[i].output;
+                    if (!pass) allPass = false;
+                    html += `<div class="tc-row ${pass ? 'tc-pass' : 'tc-fail'}"><span class="tc-icon">${pass ? '<i class="fa-solid fa-circle-check"></i>' : '<i class="fa-solid fa-circle-xmark"></i>'}</span><div class="tc-info"><strong>Case ${i + 1}</strong><span>Input: ${tests[i].input.replace(/\n/g, ' | ')}</span><span>Expected: ${tests[i].output} ${pass ? '' : '| Got: ' + (r.error || r.output || '(empty)')}</span></div></div>`;
+                } catch (e) {
+                    allPass = false;
+                    html += `<div class="tc-row tc-fail"><span class="tc-icon"><i class="fa-solid fa-circle-xmark"></i></span><div class="tc-info"><strong>Case ${i + 1}</strong><span>Error: ${e.message}</span></div></div>`;
+                }
+            }
+            html += `<div class="res-verdict ${allPass ? 'verdict-ac' : 'verdict-wa'}">${allPass ? '✅ All Sample Cases Passed' : '❌ Some Cases Failed'}</div>`;
+            rDiv.innerHTML = html;
+            setButtonsLoading(false);
+        }
+
+        async function submitCode() {
+            if (!activeProblem || !monacoEditor) return;
+            const code = monacoEditor.getValue();
+            const lang = document.getElementById('lang-select').value;
+            const tests = activeProblem.allTests;
+            setButtonsLoading(true);
+            const rDiv = document.getElementById('ed-results');
+            rDiv.innerHTML = '<div class="res-title"><div class="spinner"></div> Submitting — running all test cases...</div>';
+            let html = '<div class="res-title"><i class="fa-solid fa-paper-plane"></i> Submission Results</div>';
+            let passed = 0;
+            for (let i = 0; i < tests.length; i++) {
+                try {
+                    const r = await executeCode(code, lang, tests[i].input);
+                    const pass = r.output === tests[i].output;
+                    if (pass) passed++;
+                    html += `<div class="tc-row ${pass ? 'tc-pass' : 'tc-fail'}"><span class="tc-icon">${pass ? '<i class="fa-solid fa-circle-check"></i>' : '<i class="fa-solid fa-circle-xmark"></i>'}</span><div class="tc-info"><strong>Test ${i + 1}${i < 3 ? ' (sample)' : ' (hidden)'}</strong><span>${pass ? 'Passed' : ('Expected: ' + tests[i].output + ' | Got: ' + (r.error || r.output || '(empty)'))}</span></div></div>`;
+                } catch (e) {
+                    html += `<div class="tc-row tc-fail"><span class="tc-icon"><i class="fa-solid fa-circle-xmark"></i></span><div class="tc-info"><strong>Test ${i + 1}</strong><span>Error: ${e.message}</span></div></div>`;
+                }
+            }
+            const allPass = passed === tests.length;
+            html += `<div class="res-verdict ${allPass ? 'verdict-ac' : 'verdict-wa'}">${allPass ? '🎉 Accepted — ' + passed + '/' + tests.length + ' Passed' : '❌ Wrong Answer — ' + passed + '/' + tests.length + ' Passed'}</div>`;
+            rDiv.innerHTML = html;
+            if (allPass && currentUser && db) {
+                activeProblem.solved = true;
+                renderProblemList();
+                try {
+                    await db.collection('users').doc(currentUser.uid).set({
+                        solvedProblems: firebase.firestore.FieldValue.arrayUnion(activeProblem.id),
+                        stats: recalcStats(),
+                        displayName: currentUser.displayName || currentUser.email.split('@')[0],
+                        email: currentUser.email || '',
+                        lastActive: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                } catch (e) { console.warn('Save solved:', e.message) }
+            }
+            setButtonsLoading(false);
+        }
+
+        function setButtonsLoading(loading) {
+            document.getElementById('btn-run').disabled = loading;
+            document.getElementById('btn-submit').disabled = loading;
+        }
+
+        async function loadUserData(uid) {
+            try {
+                const doc = await db.collection('users').doc(uid).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    (data.solvedProblems || []).forEach(pid => {
+                        const p = PROBLEMS.find(x => x.id === pid);
+                        if (p) p.solved = true;
+                    });
+                    if (data.savedCodes) savedCodes = data.savedCodes;
+                }
+                // Check admin status
+                isUserAdmin = checkIsAdmin(currentUser);
+                updateNavbar(currentUser);
+                // Load approved problems from Firestore
+                if (typeof loadApprovedProblems === 'function') {
+                    await loadApprovedProblems();
+                }
+                renderTopicBar();
+                renderProblemList();
+                // Load user's submissions for the panel
+                loadMySubmissions();
+            } catch (e) { console.warn('Load user data:', e.message) }
+        }
+
+        function recalcStats() {
+            let total = 0, easy = 0, medium = 0, hard = 0;
+            PROBLEMS.forEach(p => {
+                if (p.solved) {
+                    total++;
+                    if (p.diff === 'Easy') easy++;
+                    else if (p.diff === 'Medium') medium++;
+                    else if (p.diff === 'Hard') hard++;
+                }
             });
-            if(data.savedCodes) savedCodes=data.savedCodes;
+            return { total, easy, medium, hard };
         }
+
+        renderTopicBar();
         renderProblemList();
-    }catch(e){console.warn('Load user data:',e.message)}
-}
 
-function recalcStats(){
-    let total=0,easy=0,medium=0,hard=0;
-    PROBLEMS.forEach(p=>{
-        if(p.solved){
-            total++;
-            if(p.diff==='Easy') easy++;
-            else if(p.diff==='Medium') medium++;
-            else if(p.diff==='Hard') hard++;
+        // ── CSV Upload Feature ──────────────────────────────────────────────────
+        let csvParsedProblems = [];
+
+        function openCSVModal() {
+            document.getElementById('csv-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
         }
-    });
-    return {total,easy,medium,hard};
-}
+        function closeCSVModal() {
+            document.getElementById('csv-modal').classList.remove('active');
+            document.body.style.overflow = '';
+            clearCSVUpload();
+        }
 
-renderTopicBar();
-renderProblemList();
-</script>
-<link rel="stylesheet" href="animations.css">
-<script src="animations.js"></script>
+        // Close modal on overlay click
+        document.getElementById('csv-modal').addEventListener('click', function (e) {
+            if (e.target === this) closeCSVModal();
+        });
+
+        // Drag and drop
+        const dropzone = document.getElementById('csv-dropzone');
+        dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+        dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+        dropzone.addEventListener('drop', e => {
+            e.preventDefault(); dropzone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.name.endsWith('.csv')) processCSVFile(file);
+            else showCSVError('Please drop a valid .csv file.');
+        });
+
+        function handleCSVFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (!file.name.endsWith('.csv')) { showCSVError('Please select a .csv file.'); return; }
+            processCSVFile(file);
+        }
+
+        function processCSVFile(file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const text = e.target.result;
+                    const parsed = parseCSV(text);
+                    if (parsed.length === 0) { showCSVError('No valid problems found in the CSV file. Make sure it has the correct columns.'); return; }
+                    csvParsedProblems = parsed;
+                    renderCSVPreview(parsed, file.name, file.size);
+                } catch (err) {
+                    showCSVError('Failed to parse CSV: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCSV(text) {
+            const lines = text.split(/\r?\n/);
+            if (lines.length < 2) throw new Error('CSV must have a header row and at least one data row.');
+
+            // Parse header
+            const headers = parseCSVLine(lines[0]).map(h => h.trim().toLowerCase());
+
+            // Validate required columns
+            const required = ['title', 'topic', 'difficulty', 'description', 'constraints', 'example1_input', 'example1_output', 'test1_input', 'test1_output'];
+            const missing = required.filter(r => !headers.includes(r));
+            if (missing.length > 0) throw new Error('Missing required columns: ' + missing.join(', '));
+
+            const problems = [];
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                const values = parseCSVLine(lines[i]);
+                const row = {};
+                headers.forEach((h, idx) => { row[h] = (values[idx] || '').trim(); });
+
+                // Validate required fields
+                if (!row.title || !row.topic || !row.difficulty) continue;
+
+                const diff = row.difficulty.charAt(0).toUpperCase() + row.difficulty.slice(1).toLowerCase();
+                if (!['Easy', 'Medium', 'Hard'].includes(diff)) continue;
+
+                // Build problem object
+                const id = 'csv-' + row.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+                // Build examples
+                const examples = [];
+                for (let j = 1; j <= 5; j++) {
+                    const inp = row['example' + j + '_input'];
+                    const out = row['example' + j + '_output'];
+                    if (inp && out) examples.push({ input: inp, output: out });
+                }
+                if (examples.length === 0) continue;
+
+                // Build test cases
+                const allTests = [];
+                for (let j = 1; j <= 10; j++) {
+                    const inp = row['test' + j + '_input'];
+                    const out = row['test' + j + '_output'];
+                    if (inp !== undefined && inp !== '' && out !== undefined && out !== '') {
+                        allTests.push({ input: inp.replace(/\\n/g, '\n'), output: out.replace(/\\n/g, '\n') });
+                    }
+                }
+                if (allTests.length === 0) continue;
+
+                const inputType = row['input_type'] || 'arr';
+
+                problems.push({
+                    id: id,
+                    topic: row.topic,
+                    title: row.title,
+                    diff: diff,
+                    solved: false,
+                    desc: row.description,
+                    constraints: row.constraints,
+                    examples: examples,
+                    allTests: allTests,
+                    starters: makeStarters(inputType),
+                    _inputType: inputType,
+                    _isCustom: true
+                });
+            }
+            return problems;
+        }
+
+        // Parse a single CSV line respecting quoted fields
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const ch = line[i];
+                if (inQuotes) {
+                    if (ch === '"' && line[i + 1] === '"') { current += '"'; i++; }
+                    else if (ch === '"') { inQuotes = false; }
+                    else { current += ch; }
+                } else {
+                    if (ch === '"') { inQuotes = true; }
+                    else if (ch === ',') { result.push(current); current = ''; }
+                    else { current += ch; }
+                }
+            }
+            result.push(current);
+            return result;
+        }
+
+        function renderCSVPreview(problems, fileName, fileSize) {
+            document.getElementById('csv-dropzone-area').style.display = 'none';
+            const previewArea = document.getElementById('csv-preview-area');
+            previewArea.style.display = '';
+
+            const sizeStr = fileSize < 1024 ? fileSize + ' B' : (fileSize / 1024).toFixed(1) + ' KB';
+            const easyCount = problems.filter(p => p.diff === 'Easy').length;
+            const medCount = problems.filter(p => p.diff === 'Medium').length;
+            const hardCount = problems.filter(p => p.diff === 'Hard').length;
+
+            // Check for duplicates
+            const dupes = problems.filter(p => PROBLEMS.find(x => x.id === p.id));
+            let dupeWarning = '';
+            if (dupes.length > 0) {
+                dupeWarning = `<div class="csv-error" style="border-color:rgba(255,166,87,0.3);background:rgba(255,166,87,0.06);color:var(--yellow)"><i class="fa-solid fa-triangle-exclamation"></i><div><strong>${dupes.length} duplicate(s) detected</strong> — These will be skipped: ${dupes.map(d => d.title).join(', ')}</div></div>`;
+            }
+
+            let html = `
+        <div class="csv-file-loaded">
+            <i class="fa-solid fa-file-csv"></i>
+            <div class="csv-file-info">
+                <div class="fname">${fileName}</div>
+                <div class="fmeta">${sizeStr} • ${problems.length} problem${problems.length !== 1 ? 's' : ''} detected</div>
+            </div>
+            <button class="csv-file-remove" onclick="clearCSVUpload()" title="Remove"><i class="fa-solid fa-trash"></i></button>
+        </div>
+        ${dupeWarning}
+        <div class="csv-stats">
+            <span class="csv-stat csv-stat-total"><i class="fa-solid fa-code"></i> ${problems.length} Total</span>
+            ${easyCount ? '<span class="csv-stat csv-stat-easy"><i class="fa-solid fa-circle"></i> ' + easyCount + ' Easy</span>' : ''}
+            ${medCount ? '<span class="csv-stat csv-stat-medium"><i class="fa-solid fa-circle"></i> ' + medCount + ' Medium</span>' : ''}
+            ${hardCount ? '<span class="csv-stat csv-stat-hard"><i class="fa-solid fa-circle"></i> ' + hardCount + ' Hard</span>' : ''}
+        </div>
+        <div class="csv-preview-label"><i class="fa-solid fa-table"></i> Preview</div>
+        <div class="csv-preview-wrap">
+            <table class="csv-preview-table">
+                <thead><tr><th>#</th><th>Title</th><th>Topic</th><th>Difficulty</th><th>Tests</th><th>Description</th></tr></thead>
+                <tbody>
+                    ${problems.map((p, i) => `<tr>
+                        <td>${i + 1}</td>
+                        <td style="font-weight:600">${escapeHtml(p.title)}</td>
+                        <td>${escapeHtml(p.topic)}</td>
+                        <td><span class="diff-tag diff-${p.diff.toLowerCase()}">${p.diff}</span></td>
+                        <td>${p.allTests.length}</td>
+                        <td title="${escapeHtml(p.desc)}">${escapeHtml(p.desc.substring(0, 60))}${p.desc.length > 60 ? '…' : ''}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+            previewArea.innerHTML = html;
+
+            document.getElementById('csv-confirm-btn').disabled = false;
+            document.getElementById('csv-clear-btn').style.display = '';
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function showCSVError(msg) {
+            const body = document.getElementById('csv-modal-body');
+            // Remove existing errors
+            body.querySelectorAll('.csv-error').forEach(e => e.remove());
+            const errDiv = document.createElement('div');
+            errDiv.className = 'csv-error';
+            errDiv.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i><div>${msg}</div>`;
+            body.insertBefore(errDiv, body.firstChild);
+            setTimeout(() => errDiv.remove(), 5000);
+        }
+
+        function clearCSVUpload() {
+            csvParsedProblems = [];
+            document.getElementById('csv-dropzone-area').style.display = '';
+            document.getElementById('csv-preview-area').style.display = 'none';
+            document.getElementById('csv-preview-area').innerHTML = '';
+            document.getElementById('csv-confirm-btn').disabled = true;
+            document.getElementById('csv-clear-btn').style.display = 'none';
+            document.getElementById('csv-file-input').value = '';
+            // Remove errors
+            document.getElementById('csv-modal-body').querySelectorAll('.csv-error').forEach(e => e.remove());
+        }
+
+        async function confirmCSVImport() {
+            if (csvParsedProblems.length === 0) return;
+            if (!currentUser || !db) {
+                showCSVError('You must be logged in to submit problems.');
+                return;
+            }
+
+            // Filter out duplicates against existing problems
+            const newProblems = csvParsedProblems.filter(p => !PROBLEMS.find(x => x.id === p.id));
+            if (newProblems.length === 0) {
+                showCSVError('All problems already exist. No new problems to add.');
+                return;
+            }
+
+            // Disable button while submitting
+            const confirmBtn = document.getElementById('csv-confirm-btn');
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<div class="spinner"></div> Submitting...';
+
+            try {
+                const batch = db.batch();
+                newProblems.forEach(p => {
+                    const docRef = db.collection('pending_problems').doc();
+                    batch.set(docRef, {
+                        id: p.id,
+                        topic: p.topic,
+                        title: p.title,
+                        diff: p.diff,
+                        desc: p.desc,
+                        constraints: p.constraints,
+                        examples: p.examples,
+                        allTests: p.allTests,
+                        _inputType: p._inputType || 'arr',
+                        status: 'pending',
+                        submittedBy: currentUser.uid,
+                        submittedByEmail: currentUser.email || '',
+                        submittedByName: currentUser.displayName || currentUser.email.split('@')[0],
+                        submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                });
+                await batch.commit();
+
+                // Close modal with success feedback
+                closeCSVModal();
+                showSuccessToast(newProblems.length + ' problem' + (newProblems.length !== 1 ? 's' : '') + ' submitted for admin review!');
+
+                // Refresh submissions panel
+                loadMySubmissions();
+            } catch (err) {
+                showCSVError('Failed to submit: ' + err.message);
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Submit for Review';
+            }
+        }
+
+        function downloadCSVTemplate() {
+            const headers = ['title', 'topic', 'difficulty', 'description', 'constraints', 'example1_input', 'example1_output', 'example2_input', 'example2_output', 'test1_input', 'test1_output', 'test2_input', 'test2_output', 'test3_input', 'test3_output', 'test4_input', 'test4_output', 'test5_input', 'test5_output', 'input_type'];
+            const sampleRow = ['Reverse Array', 'Array', 'Easy', 'Given an array of integers, reverse it and return the result.', '1 ≤ nums.length ≤ 10⁴', 'nums = [1,2,3,4,5]', '[5,4,3,2,1]', 'nums = [3,2,1]', '[1,2,3]', '1 2 3 4 5', '5 4 3 2 1', '3 2 1', '1 2 3', '1', '1', '', '', '', '', 'arr'];
+            const csvContent = headers.join(',') + '\n' + sampleRow.map(v => '"' + v.replace(/"/g, '""') + '"').join(',');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'nietcode_problems_template.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ── My Submissions Panel ──────────────────────────────────────────────
+        let mySubmissions = [];
+        let subFilterStatus = 'all';
+
+        async function loadMySubmissions() {
+            if (!currentUser || !db) return;
+            try {
+                const snap = await db.collection('pending_problems')
+                    .where('submittedBy', '==', currentUser.uid)
+                    .orderBy('submittedAt', 'desc')
+                    .get();
+                mySubmissions = [];
+                snap.forEach(doc => {
+                    mySubmissions.push({ _docId: doc.id, ...doc.data() });
+                });
+                renderMySubmissions();
+            } catch (e) {
+                console.warn('Load submissions:', e.message);
+                // If index not created yet, try without ordering
+                try {
+                    const snap2 = await db.collection('pending_problems')
+                        .where('submittedBy', '==', currentUser.uid)
+                        .get();
+                    mySubmissions = [];
+                    snap2.forEach(doc => {
+                        mySubmissions.push({ _docId: doc.id, ...doc.data() });
+                    });
+                    // Sort client-side
+                    mySubmissions.sort((a, b) => {
+                        const ta = a.submittedAt?.toMillis?.() || 0;
+                        const tb = b.submittedAt?.toMillis?.() || 0;
+                        return tb - ta;
+                    });
+                    renderMySubmissions();
+                } catch (e2) { console.warn('Load submissions fallback:', e2.message); }
+            }
+        }
+
+        function renderMySubmissions() {
+            const container = document.getElementById('my-submissions-area');
+            if (!container) return;
+
+            const filtered = subFilterStatus === 'all' ? mySubmissions : mySubmissions.filter(s => s.status === subFilterStatus);
+
+            const counts = {
+                all: mySubmissions.length,
+                pending: mySubmissions.filter(s => s.status === 'pending').length,
+                approved: mySubmissions.filter(s => s.status === 'approved').length,
+                rejected: mySubmissions.filter(s => s.status === 'rejected').length
+            };
+
+            let html = `<div class="submissions-header">
+        <h3><i class="fa-solid fa-clock-rotate-left"></i> My Submissions</h3>
+        <div class="sub-tabs">
+            <button class="sub-tab ${subFilterStatus === 'all' ? 'active' : ''}" onclick="setSubFilter('all')">All (${counts.all})</button>
+            <button class="sub-tab ${subFilterStatus === 'pending' ? 'active' : ''}" onclick="setSubFilter('pending')">Pending (${counts.pending})</button>
+            <button class="sub-tab ${subFilterStatus === 'approved' ? 'active' : ''}" onclick="setSubFilter('approved')">Approved (${counts.approved})</button>
+            <button class="sub-tab ${subFilterStatus === 'rejected' ? 'active' : ''}" onclick="setSubFilter('rejected')">Rejected (${counts.rejected})</button>
+        </div>
+    </div>`;
+
+            if (filtered.length === 0) {
+                html += '<div class="sub-empty"><i class="fa-regular fa-folder-open" style="font-size:28px;display:block;margin-bottom:10px;"></i>No submissions found</div>';
+            } else {
+                filtered.forEach(s => {
+                    const statusClass = s.status === 'pending' ? 'sub-pending' : s.status === 'approved' ? 'sub-approved' : 'sub-rejected';
+                    const statusIcon = s.status === 'pending' ? 'fa-clock' : s.status === 'approved' ? 'fa-circle-check' : 'fa-circle-xmark';
+                    const date = s.submittedAt?.toDate ? s.submittedAt.toDate().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Just now';
+                    const diffClass = 'diff-' + (s.diff || 'easy').toLowerCase();
+                    html += `<div class="sub-card">
+                <div class="sub-card-info">
+                    <div class="sub-card-title">${escapeHtml(s.title)}</div>
+                    <div class="sub-card-meta">
+                        <span>${escapeHtml(s.topic)}</span>
+                        <span class="diff-tag ${diffClass}" style="padding:2px 8px;font-size:10px">${s.diff}</span>
+                        <span><i class="fa-regular fa-calendar"></i> ${date}</span>
+                    </div>
+                    ${s.status === 'rejected' && s.rejectReason ? '<div class="sub-reject-reason"><i class="fa-solid fa-quote-left"></i> ' + escapeHtml(s.rejectReason) + '</div>' : ''}
+                </div>
+                <span class="sub-status ${statusClass}"><i class="fa-solid ${statusIcon}"></i> ${s.status.charAt(0).toUpperCase() + s.status.slice(1)}</span>
+            </div>`;
+                });
+            }
+
+            container.innerHTML = html;
+        }
+
+        function setSubFilter(status) {
+            subFilterStatus = status;
+            renderMySubmissions();
+        }
+
+        // Success toast
+        function showSuccessToast(msg) {
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);padding:14px 28px;border-radius:14px;background:rgba(63,185,80,0.15);border:1px solid rgba(63,185,80,0.3);color:#3fb950;font-size:14px;font-weight:700;font-family:DM Sans,sans-serif;z-index:9999;backdrop-filter:blur(12px);display:flex;align-items:center;gap:10px;box-shadow:0 10px 40px rgba(0,0,0,0.4);opacity:0;transition:all .4s cubic-bezier(0.16,1,0.3,1)';
+            toast.innerHTML = '<i class="fa-solid fa-circle-check"></i>' + msg;
+            document.body.appendChild(toast);
+            requestAnimationFrame(() => { toast.style.opacity = '1'; toast.style.transform = 'translateX(-50%) translateY(0)'; });
+            setTimeout(() => {
+                toast.style.opacity = '0'; toast.style.transform = 'translateX(-50%) translateY(20px)';
+                setTimeout(() => toast.remove(), 400);
+            }, 3500);
+        }
+    </script>
+    <link rel="stylesheet" href="animations.css">
+    <script src="animations.js"></script>
 </body>
+
 </html>

@@ -169,3 +169,63 @@ const PROBLEMS = [
   {id:'regex-matching',topic:'String',title:'Regular Expression Matching',diff:'Hard',solved:false,desc:'Implement regular expression matching with support for . and *.',constraints:'1 ≤ s.length ≤ 20',examples:[{input:'aa\na',output:'false'},{input:'aa\na*',output:'true'}],allTests:[{input:'aa\na',output:'false'},{input:'aa\na*',output:'true'},{input:'ab\n.*',output:'true'},{input:'aab\nc*a*b',output:'true'},{input:'a\nab*',output:'true'}],starters:makeStarters('ops')},
   {id:'edit-distance',topic:'String',title:'Edit Distance',diff:'Hard',solved:false,desc:'Find the minimum number of operations (insert, delete, replace) to convert word1 to word2.',constraints:'0 ≤ word.length ≤ 500',examples:[{input:'horse\nros',output:'3'},{input:'intention\nexecution',output:'5'}],allTests:[{input:'horse\nros',output:'3'},{input:'intention\nexecution',output:'5'},{input:'\n',output:'0'},{input:'a\n',output:'1'},{input:'abc\nabc',output:'0'}],starters:makeStarters('ops')},
 ];
+
+// ── Load approved problems from Firestore (with localStorage cache fallback) ──
+function _loadApprovedFromCache(){
+  try {
+    const stored = localStorage.getItem('nietcode_approved_problems');
+    if(stored){
+      const approved = JSON.parse(stored);
+      approved.forEach(p => {
+        if(!PROBLEMS.find(x => x.id === p.id)){
+          p.starters = p.starters || makeStarters(p._inputType || 'arr');
+          p.solved = false;
+          PROBLEMS.push(p);
+        }
+      });
+      approved.forEach(p => {
+        if(p.topic && !TOPICS.includes(p.topic)){
+          TOPICS.push(p.topic);
+        }
+      });
+    }
+  } catch(e){ console.warn('Failed to load cached approved problems:', e.message); }
+}
+
+// Load cache immediately so problems render fast
+_loadApprovedFromCache();
+
+// Async Firestore fetch — called after Firebase inits
+async function loadApprovedProblems(){
+  try {
+    if(typeof firebase === 'undefined' || !firebase.apps.length) return;
+    const db = firebase.firestore();
+    const snap = await db.collection('approved_problems').get();
+    if(snap.empty) return;
+    const approved = [];
+    snap.forEach(doc => {
+      const p = doc.data();
+      p.id = p.id || doc.id;
+      p.starters = makeStarters(p._inputType || 'arr');
+      p.solved = false;
+      p._isApproved = true;
+      approved.push(p);
+    });
+    // Merge into PROBLEMS (avoid dupes)
+    approved.forEach(p => {
+      if(!PROBLEMS.find(x => x.id === p.id)){
+        PROBLEMS.push(p);
+        if(p.topic && !TOPICS.includes(p.topic)) TOPICS.push(p.topic);
+      }
+    });
+    // Cache for offline fallback
+    try {
+      const toCache = approved.map(p => ({
+        id:p.id, topic:p.topic, title:p.title, diff:p.diff,
+        desc:p.desc, constraints:p.constraints, examples:p.examples,
+        allTests:p.allTests, _inputType:p._inputType, _isApproved:true
+      }));
+      localStorage.setItem('nietcode_approved_problems', JSON.stringify(toCache));
+    } catch(e){}
+  } catch(e){ console.warn('Failed to load approved problems from Firestore:', e.message); }
+}

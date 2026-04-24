@@ -10,6 +10,7 @@
     <!-- Firebase (must load BEFORE Monaco's AMD loader to avoid conflict) -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
     <style>
         :root {
@@ -245,6 +246,110 @@
         .reveal.visible { opacity:1; transform:translateY(0); }
         .reveal-delay-1{transition-delay:0.1s} .reveal-delay-2{transition-delay:0.2s} .reveal-delay-3{transition-delay:0.3s}
 
+        /* ── LEADERBOARD SKELETON ── */
+        .lb-skeleton .lb-row { pointer-events:none; }
+        .lb-skel-bar { height:14px; border-radius:6px; background:var(--surface2); animation:skel-pulse 1.2s ease-in-out infinite; }
+        .lb-skel-bar.w60 { width:60%; }
+        .lb-skel-bar.w30 { width:30%; }
+        .lb-skel-avatar { width:36px; height:36px; border-radius:10px; background:var(--surface2); animation:skel-pulse 1.2s ease-in-out infinite; }
+
+        /* ── CHAT WIDGET ── */
+        .chat-fab {
+            position:fixed; bottom:28px; right:28px; z-index:1500;
+            width:58px; height:58px; border-radius:50%;
+            background:linear-gradient(135deg, var(--orange), #e8910e);
+            border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;
+            font-size:24px; color:#000; box-shadow:0 6px 30px var(--orange-glow);
+            transition:all 0.3s cubic-bezier(.16,1,.3,1);
+        }
+        .chat-fab:hover { transform:scale(1.08) translateY(-2px); box-shadow:0 10px 40px var(--orange-glow); }
+        .chat-fab.hide { transform:scale(0); opacity:0; pointer-events:none; }
+        .chat-badge {
+            position:absolute; top:-2px; right:-2px; width:20px; height:20px; border-radius:50%;
+            background:var(--red); color:#fff; font-size:10px; font-weight:800;
+            display:none; align-items:center; justify-content:center; border:2px solid var(--bg);
+        }
+        .chat-badge.show { display:flex; }
+
+        .chat-panel {
+            position:fixed; bottom:28px; right:28px; z-index:1500;
+            width:380px; height:520px; max-height:calc(100vh - 100px);
+            background:rgba(17,24,32,0.95); backdrop-filter:blur(20px);
+            border:1px solid var(--border2); border-radius:20px;
+            box-shadow:0 25px 80px rgba(0,0,0,0.6);
+            display:flex; flex-direction:column; overflow:hidden;
+            transform:scale(0.8) translateY(20px); opacity:0; pointer-events:none;
+            transition:all 0.35s cubic-bezier(.16,1,.3,1);
+            transform-origin:bottom right;
+        }
+        .chat-panel.open { transform:scale(1) translateY(0); opacity:1; pointer-events:auto; }
+
+        .chat-head {
+            padding:16px 20px; display:flex; align-items:center; justify-content:space-between;
+            border-bottom:1px solid var(--border); flex-shrink:0;
+        }
+        .chat-head-title { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; display:flex; align-items:center; gap:8px; }
+        .chat-head-title i { color:var(--orange); }
+        .chat-online { font-size:11px; color:var(--green); display:flex; align-items:center; gap:5px; }
+        .chat-online::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--green); animation:blink 2s infinite; }
+        .chat-close { width:32px; height:32px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text-muted); font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s; }
+        .chat-close:hover { border-color:var(--text-muted); color:var(--text); }
+
+        .chat-messages {
+            flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px;
+        }
+        .chat-messages::-webkit-scrollbar { width:4px; }
+        .chat-messages::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+
+        .chat-msg {
+            display:flex; gap:10px; align-items:flex-start; animation:chatFadeIn 0.3s ease;
+        }
+        @keyframes chatFadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        .chat-msg-avatar {
+            width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+            font-weight:700; font-size:13px; font-family:'Syne',sans-serif; flex-shrink:0;
+        }
+        .chat-msg-body { flex:1; min-width:0; }
+        .chat-msg-head { display:flex; align-items:baseline; gap:8px; margin-bottom:3px; }
+        .chat-msg-name { font-size:13px; font-weight:700; color:var(--text); }
+        .chat-msg-time { font-size:10px; color:var(--text-muted); }
+        .chat-msg-text { font-size:13px; color:var(--text-soft); line-height:1.6; word-break:break-word; }
+        .chat-msg.own { flex-direction:row-reverse; }
+        .chat-msg.own .chat-msg-head { flex-direction:row-reverse; }
+        .chat-msg.own .chat-msg-text { background:rgba(255,161,22,0.08); border:1px solid rgba(255,161,22,0.15); padding:8px 12px; border-radius:12px 4px 12px 12px; }
+
+        .chat-empty { text-align:center; padding:40px 20px; color:var(--text-muted); font-size:14px; }
+        .chat-empty i { font-size:36px; display:block; margin-bottom:12px; color:var(--border); }
+
+        .chat-input-area {
+            padding:12px 16px; border-top:1px solid var(--border); display:flex; gap:8px; align-items:center; flex-shrink:0;
+        }
+        .chat-input {
+            flex:1; padding:10px 14px; border-radius:10px; border:1px solid var(--border);
+            background:var(--surface); color:var(--text); font-size:13px; font-family:inherit;
+            outline:none; transition:border-color 0.2s; resize:none;
+        }
+        .chat-input:focus { border-color:var(--orange); }
+        .chat-input::placeholder { color:var(--text-muted); }
+        .chat-send {
+            width:38px; height:38px; border-radius:10px; border:none;
+            background:var(--orange); color:#000; font-size:14px;
+            cursor:pointer; display:flex; align-items:center; justify-content:center;
+            transition:0.2s; flex-shrink:0;
+        }
+        .chat-send:hover { filter:brightness(1.1); transform:translateY(-1px); }
+        .chat-send:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+
+        .chat-login-prompt {
+            padding:20px; text-align:center; border-top:1px solid var(--border); flex-shrink:0;
+        }
+        .chat-login-btn {
+            padding:10px 24px; border-radius:10px; border:none;
+            background:var(--orange); color:#000; font-size:13px; font-weight:700;
+            cursor:pointer; font-family:inherit; transition:0.2s;
+        }
+        .chat-login-btn:hover { filter:brightness(1.1); }
+
         @media(max-width:900px){
             .navbar{padding:0 20px} .nav-links{display:none}
             .stats-grid{grid-template-columns:repeat(2,1fr)}
@@ -257,6 +362,8 @@
             .sandbox-section,.features-section,.topics-section,.lb-section{padding:60px 20px}
             .stats-section{padding:0 20px 60px} .hiw-section,.cta-section{padding:60px 20px}
             footer{padding:30px 20px;flex-direction:column;text-align:center}
+            .chat-panel{width:calc(100vw - 24px);right:12px;bottom:12px;height:60vh;}
+            .chat-fab{bottom:16px;right:16px;width:50px;height:50px;font-size:20px;}
         }
     </style>
 </head>
@@ -331,10 +438,10 @@
 <!-- ── STATS ── -->
 <div class="stats-section">
     <div class="stats-grid">
-        <div class="stat-card reveal"><div class="stat-number" data-target="120">0</div><div class="stat-label">Problems Available</div></div>
-        <div class="stat-card reveal reveal-delay-1"><div class="stat-number" data-target="1400">0</div><div class="stat-label">Active Students</div></div>
-        <div class="stat-card reveal reveal-delay-2"><div class="stat-number" data-target="8">0</div><div class="stat-label">Topics Covered</div></div>
-        <div class="stat-card reveal reveal-delay-3"><div class="stat-number" data-target="95">0</div><div class="stat-label">Placement Rate %</div></div>
+        <div class="stat-card reveal"><div class="stat-number" id="stat-problems" data-target="20">0</div><div class="stat-label">Problems Available</div></div>
+        <div class="stat-card reveal reveal-delay-1"><div class="stat-number" id="stat-students" data-target="10">0</div><div class="stat-label">Registered Students</div></div>
+        <div class="stat-card reveal reveal-delay-2"><div class="stat-number" id="stat-topics" data-target="6">0</div><div class="stat-label">Topics Covered</div></div>
+        <div class="stat-card reveal reveal-delay-3"><div class="stat-number" id="stat-free" data-target="100">0</div><div class="stat-label">% Free Forever</div></div>
     </div>
 </div>
 
@@ -389,18 +496,21 @@
 <!-- ── LEADERBOARD ── -->
 <div class="lb-section">
     <div class="lb-grid">
-        <div class="lb-table reveal">
-            <div class="lb-header"><span><i class="fa-solid fa-trophy" style="color:var(--orange);margin-right:6px;"></i>College Leaderboard</span><span>This Week</span></div>
-            <div class="lb-row"><div class="lb-rank rank-1">🥇</div><div class="lb-avatar" style="background:rgba(255,161,22,0.15);color:var(--orange);">K</div><div class="lb-name">Kartikey K.</div><div><div class="lb-score">2,840</div><div class="lb-solved">47 solved</div></div></div>
-            <div class="lb-row"><div class="lb-rank rank-2">🥈</div><div class="lb-avatar" style="background:rgba(77,159,255,0.15);color:var(--blue);">A</div><div class="lb-name">Aryan S.</div><div><div class="lb-score">2,310</div><div class="lb-solved">38 solved</div></div></div>
-            <div class="lb-row"><div class="lb-rank rank-3">🥉</div><div class="lb-avatar" style="background:rgba(0,212,170,0.15);color:var(--green);">P</div><div class="lb-name">Priya M.</div><div><div class="lb-score">1,990</div><div class="lb-solved">33 solved</div></div></div>
-            <div class="lb-row"><div class="lb-rank rank-other">4</div><div class="lb-avatar" style="background:rgba(167,139,250,0.15);color:#a78bfa;">R</div><div class="lb-name">Rahul T.</div><div><div class="lb-score">1,750</div><div class="lb-solved">29 solved</div></div></div>
-            <div class="lb-row"><div class="lb-rank rank-other">5</div><div class="lb-avatar" style="background:rgba(255,87,87,0.15);color:var(--red);">S</div><div class="lb-name">Sneha G.</div><div><div class="lb-score">1,420</div><div class="lb-solved">24 solved</div></div></div>
+        <div class="lb-table reveal" id="lb-table-container">
+            <div class="lb-header"><span><i class="fa-solid fa-trophy" style="color:var(--orange);margin-right:6px;"></i>College Leaderboard</span><span>All Time</span></div>
+            <div id="lb-rows" class="lb-skeleton">
+                <div class="lb-row"><div class="lb-skel-avatar"></div><div style="flex:1"><div class="lb-skel-bar w60"></div></div><div class="lb-skel-bar w30" style="width:50px"></div></div>
+                <div class="lb-row"><div class="lb-skel-avatar"></div><div style="flex:1"><div class="lb-skel-bar w60"></div></div><div class="lb-skel-bar w30" style="width:50px"></div></div>
+                <div class="lb-row"><div class="lb-skel-avatar"></div><div style="flex:1"><div class="lb-skel-bar w60"></div></div><div class="lb-skel-bar w30" style="width:50px"></div></div>
+                <div class="lb-row"><div class="lb-skel-avatar"></div><div style="flex:1"><div class="lb-skel-bar w60"></div></div><div class="lb-skel-bar w30" style="width:50px"></div></div>
+                <div class="lb-row"><div class="lb-skel-avatar"></div><div style="flex:1"><div class="lb-skel-bar w60"></div></div><div class="lb-skel-bar w30" style="width:50px"></div></div>
+            </div>
         </div>
         <div class="lb-text-side reveal reveal-delay-1">
             <div class="section-tag">Leaderboard</div>
             <h2 class="section-title" style="font-size:40px;">Compete with<br>your batch</h2>
             <p class="section-sub" style="margin-bottom:0;">Real rankings among NIET students. Every problem you solve earns points.</p>
+            <p style="font-size:12px;color:var(--text-muted);margin-top:12px;"><i class="fa-solid fa-calculator" style="color:var(--orange);margin-right:4px;"></i> Scoring: Easy ×10 · Medium ×25 · Hard ×50</p>
             <div class="rank-badges">
                 <div class="rank-badge rb-gold"><i class="fa-solid fa-crown"></i> Gold Coder</div>
                 <div class="rank-badge rb-silver"><i class="fa-solid fa-medal"></i> Silver Coder</div>
@@ -414,13 +524,33 @@
 <section class="cta-section" id="cta-section">
     <div class="cta-inner" id="cta-inner">
         <h2 class="cta-title reveal">Ready to start<br>your journey?</h2>
-        <p class="cta-sub reveal">Join 1,400+ NIET students already practicing on NIETCode.</p>
+        <p class="cta-sub reveal" id="cta-sub-text">Join NIET students already practicing on NIETCode. 100% free, forever.</p>
         <div class="cta-actions reveal">
             <button onclick="guardedNav('Problems.html')" class="btn-hero-primary"><i class="fa-solid fa-rocket"></i> Start Solving Free</button>
             <button onclick="guardedNav('Problems.html')" class="btn-hero-secondary"><i class="fa-solid fa-list"></i> Browse Problems</button>
         </div>
     </div>
 </section>
+
+<!-- ── CHAT WIDGET ── -->
+<button class="chat-fab" id="chat-fab" onclick="toggleChat()" title="Open Chat">
+    <i class="fa-solid fa-comments"></i>
+    <span class="chat-badge" id="chat-badge"></span>
+</button>
+
+<div class="chat-panel" id="chat-panel">
+    <div class="chat-head">
+        <div>
+            <div class="chat-head-title"><i class="fa-solid fa-comments"></i> NIETCode Chat</div>
+            <div class="chat-online">Live Discussion</div>
+        </div>
+        <button class="chat-close" onclick="toggleChat()" title="Close"><i class="fa-solid fa-minus"></i></button>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+        <div class="chat-empty"><i class="fa-regular fa-comments"></i>No messages yet.<br>Start the conversation!</div>
+    </div>
+    <div id="chat-bottom-area"></div>
+</div>
 
 <!-- ── FOOTER ── -->
 <footer>
@@ -591,75 +721,247 @@ async function handleChangePassword() {
 // ═══════════════════════════════════════════════════
 // FIREBASE
 // ═══════════════════════════════════════════════════
+let db = null;
+
 function initFirebase() {
     if (typeof firebase === 'undefined' || !firebase.initializeApp) {
         console.warn('Firebase SDK not available yet.');
         return false;
     }
-
     try {
-        // Prevent double-init
         if (!firebase.apps.length) {
-            const firebaseConfig = {
+            firebase.initializeApp({
                 apiKey:            "AIzaSyBvS473QS25-jvd_zm4VmOA5UX4yIbvytU",
                 authDomain:        "niet-code.firebaseapp.com",
                 projectId:         "niet-code",
                 storageBucket:     "niet-code.firebasestorage.app",
                 messagingSenderId: "331564337114",
                 appId:             "1:331564337114:web:56c072292a02d8fc4422e3"
-            };
-            firebase.initializeApp(firebaseConfig);
+            });
         }
-
+        db = firebase.firestore();
         const auth = firebase.auth();
 
         auth.onAuthStateChanged(user => {
             currentUser = user;
             updateNavbar(user);
             _authResolve();
-            if (user) closeGate();
+            if (user) { closeGate(); updateChatBottomArea(); }
+            else { updateChatBottomArea(); }
+            // Load dynamic data once Firebase is ready
+            loadLeaderboard();
+            loadDynamicStats();
+            initChat();
         });
 
         window.addEventListener('focus', () => {
             const liveUser = firebase.auth().currentUser;
-            if (liveUser && !currentUser) {
-                currentUser = liveUser;
-                updateNavbar(liveUser);
-                closeGate();
-            } else if (!liveUser && currentUser) {
-                currentUser = null;
-                updateNavbar(null);
-            }
+            if (liveUser && !currentUser) { currentUser = liveUser; updateNavbar(liveUser); closeGate(); updateChatBottomArea(); }
+            else if (!liveUser && currentUser) { currentUser = null; updateNavbar(null); updateChatBottomArea(); }
         });
 
         window.doSignOut = function () { auth.signOut(); };
         return true;
-
     } catch (err) {
         console.warn('Firebase init failed:', err.message);
         return false;
     }
 }
 
-// Try immediately; if SDK hasn't loaded yet, retry with delay
 if (!initFirebase()) {
-    // Retry every 500ms, up to 3 seconds
     let attempts = 0;
     const retryInterval = setInterval(() => {
         attempts++;
-        if (initFirebase()) {
+        if (initFirebase()) { clearInterval(retryInterval); }
+        else if (attempts >= 6) {
             clearInterval(retryInterval);
-            console.log('Firebase initialized on retry #' + attempts);
-        } else if (attempts >= 6) {
-            clearInterval(retryInterval);
-            console.warn('Firebase SDK failed to load after 3s. Running in guest mode.');
-            _authResolve();
-            updateNavbar(null);
+            _authResolve(); updateNavbar(null);
             window.doSignOut = function () { window.location.href = 'Login.html'; };
         }
     }, 500);
 }
 
+// ═══════════════════════════════════════════════════
+// DYNAMIC LEADERBOARD
+// ═══════════════════════════════════════════════════
+const LB_COLORS = [
+    {bg:'rgba(255,161,22,0.15)',color:'var(--orange)'},
+    {bg:'rgba(77,159,255,0.15)',color:'#58a6ff'},
+    {bg:'rgba(0,212,170,0.15)',color:'#00d4aa'},
+    {bg:'rgba(167,139,250,0.15)',color:'#a78bfa'},
+    {bg:'rgba(255,87,87,0.15)',color:'#ff5757'},
+    {bg:'rgba(255,206,86,0.15)',color:'#ffce56'},
+];
+function calcScore(stats) {
+    if (!stats) return 0;
+    return (stats.easy || 0) * 10 + (stats.medium || 0) * 25 + (stats.hard || 0) * 50;
+}
+async function loadLeaderboard() {
+    if (!db) return;
+    try {
+        const snap = await db.collection('users').get();
+        const users = [];
+        snap.forEach(doc => {
+            const d = doc.data();
+            const stats = d.stats || {};
+            const total = stats.total || 0;
+            if (total < 1) return; // only users who solved ≥1
+            const name = d.displayName || d.name || (d.email ? d.email.split('@')[0] : 'User');
+            users.push({ name, stats, total, score: calcScore(stats) });
+        });
+        users.sort((a, b) => b.score - a.score || b.total - a.total);
+        const top5 = users.slice(0, 5);
+        renderLeaderboard(top5);
+    } catch(e) { console.warn('Leaderboard:', e.message); }
+}
+function renderLeaderboard(users) {
+    const container = document.getElementById('lb-rows');
+    if (!container) return;
+    if (users.length === 0) {
+        container.innerHTML = '<div style="padding:30px 20px;text-align:center;color:var(--text-muted);font-size:14px;"><i class="fa-solid fa-trophy" style="font-size:28px;display:block;margin-bottom:10px;color:var(--border);"></i>No rankings yet.<br>Be the first to solve a problem!</div>';
+        container.classList.remove('lb-skeleton');
+        return;
+    }
+    const rankIcons = ['🥇','🥈','🥉'];
+    let html = '';
+    users.forEach((u, i) => {
+        const c = LB_COLORS[i % LB_COLORS.length];
+        const initial = u.name.charAt(0).toUpperCase();
+        const rankClass = i < 3 ? 'rank-'+(i+1) : 'rank-other';
+        const rankLabel = i < 3 ? rankIcons[i] : (i+1);
+        html += `<div class="lb-row">
+            <div class="lb-rank ${rankClass}">${rankLabel}</div>
+            <div class="lb-avatar" style="background:${c.bg};color:${c.color};">${initial}</div>
+            <div class="lb-name">${u.name}</div>
+            <div><div class="lb-score">${u.score.toLocaleString()}</div><div class="lb-solved">${u.total} solved</div></div>
+        </div>`;
+    });
+    container.innerHTML = html;
+    container.classList.remove('lb-skeleton');
+}
+
+// ═══════════════════════════════════════════════════
+// DYNAMIC STATS
+// ═══════════════════════════════════════════════════
+async function loadDynamicStats() {
+    if (!db) return;
+    try {
+        const snap = await db.collection('users').get();
+        const studentCount = snap.size;
+        const el = document.getElementById('stat-students');
+        if (el) el.dataset.target = String(studentCount);
+    } catch(e) { console.warn('Stats:', e.message); }
+}
+
+// ═══════════════════════════════════════════════════
+// CHAT WIDGET
+// ═══════════════════════════════════════════════════
+let chatOpen = false;
+let chatUnsub = null;
+let chatInitDone = false;
+
+function toggleChat() {
+    chatOpen = !chatOpen;
+    document.getElementById('chat-panel').classList.toggle('open', chatOpen);
+    document.getElementById('chat-fab').classList.toggle('hide', chatOpen);
+    if (chatOpen) {
+        document.getElementById('chat-badge').classList.remove('show');
+        const msgs = document.getElementById('chat-messages');
+        msgs.scrollTop = msgs.scrollHeight;
+    }
+}
+
+function updateChatBottomArea() {
+    const area = document.getElementById('chat-bottom-area');
+    if (!area) return;
+    if (currentUser) {
+        area.innerHTML = `<div class="chat-input-area">
+            <input class="chat-input" id="chat-input" placeholder="Type a message..." maxlength="500" autocomplete="off">
+            <button class="chat-send" id="chat-send-btn" onclick="sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>`;
+        const inp = document.getElementById('chat-input');
+        if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); } });
+    } else {
+        area.innerHTML = `<div class="chat-login-prompt">
+            <div style="font-size:13px;color:var(--text-muted);margin-bottom:10px;">Sign in to join the conversation</div>
+            <button class="chat-login-btn" onclick="window.location.href='Login.html'"><i class="fa-solid fa-right-to-bracket"></i> Sign In</button>
+        </div>`;
+    }
+}
+
+function initChat() {
+    if (chatInitDone || !db) return;
+    chatInitDone = true;
+    updateChatBottomArea();
+    // Real-time listener for last 50 messages
+    chatUnsub = db.collection('chat_messages')
+        .orderBy('timestamp', 'asc')
+        .limitToLast(50)
+        .onSnapshot(snap => {
+            const msgs = [];
+            snap.forEach(doc => msgs.push({ id: doc.id, ...doc.data() }));
+            renderChatMessages(msgs);
+        }, err => console.warn('Chat listener:', err.message));
+}
+
+function renderChatMessages(msgs) {
+    const container = document.getElementById('chat-messages');
+    if (!container) return;
+    if (msgs.length === 0) {
+        container.innerHTML = '<div class="chat-empty"><i class="fa-regular fa-comments"></i>No messages yet.<br>Start the conversation!</div>';
+        return;
+    }
+    const myUid = currentUser ? currentUser.uid : null;
+    container.innerHTML = msgs.map(m => {
+        const isOwn = m.uid === myUid;
+        const initial = (m.name || '?').charAt(0).toUpperCase();
+        const ci = Math.abs((m.name || '').length * 7 + initial.charCodeAt(0)) % LB_COLORS.length;
+        const c = LB_COLORS[ci];
+        const timeStr = m.timestamp ? timeAgo(m.timestamp.toDate()) : 'now';
+        return `<div class="chat-msg${isOwn ? ' own' : ''}">
+            <div class="chat-msg-avatar" style="background:${c.bg};color:${c.color};">${initial}</div>
+            <div class="chat-msg-body">
+                <div class="chat-msg-head"><span class="chat-msg-name">${escHTML(m.name || 'User')}</span><span class="chat-msg-time">${timeStr}</span></div>
+                <div class="chat-msg-text">${escHTML(m.message)}</div>
+            </div>
+        </div>`;
+    }).join('');
+    container.scrollTop = container.scrollHeight;
+    // Badge if closed
+    if (!chatOpen && msgs.length > 0) {
+        const badge = document.getElementById('chat-badge');
+        if (badge) badge.classList.add('show');
+    }
+}
+
+function escHTML(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function timeAgo(date) {
+    const s = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (s < 60) return 'just now';
+    if (s < 3600) return Math.floor(s/60) + 'm ago';
+    if (s < 86400) return Math.floor(s/3600) + 'h ago';
+    return Math.floor(s/86400) + 'd ago';
+}
+
+async function sendChatMessage() {
+    if (!currentUser || !db) return;
+    const inp = document.getElementById('chat-input');
+    const msg = (inp ? inp.value : '').trim();
+    if (!msg) return;
+    inp.value = '';
+    const btn = document.getElementById('chat-send-btn');
+    if (btn) btn.disabled = true;
+    try {
+        await db.collection('chat_messages').add({
+            uid: currentUser.uid,
+            name: currentUser.displayName || currentUser.email.split('@')[0],
+            message: msg,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    } catch(e) { console.warn('Send chat:', e.message); }
+    if (btn) btn.disabled = false;
+}
 
 // ═══════════════════════════════════════════════════
 // PAGE UTILITIES
@@ -673,7 +975,7 @@ const cntObs = new IntersectionObserver(entries => {
     entries.forEach(x => {
         if (x.isIntersecting) {
             const t = parseInt(x.target.dataset.target);
-            const s = (t === 95) ? '%' : (t === 1400 || t === 120) ? '+' : '';
+            const s = (t === 100) ? '%' : '+';
             let start = 0;
             const tick = ts => { if (!start) start = ts; const p = Math.min((ts-start)/1800,1); x.target.textContent = Math.floor((1-Math.pow(1-p,3))*t)+s; if(p<1) requestAnimationFrame(tick); };
             requestAnimationFrame(tick); cntObs.unobserve(x.target);
@@ -686,7 +988,6 @@ window.addEventListener('scroll', () => {
     const nb = document.getElementById('navbar');
     if (nb) nb.style.borderBottomColor = window.scrollY > 60 ? 'rgba(30,45,64,0.9)' : 'var(--border)';
 });
-
 
 </script>
 <link rel="stylesheet" href="animations.css">
